@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <time.h>
 #include <locale>
-#include <codecvt>
 #include <sys/stat.h>
 #include "Buffer.h"
 #include "Scintilla.h"
@@ -168,8 +167,7 @@ void Buffer::updateTimeStamp()
 				wstring nppIssueLog = nppParam.getUserPath();
 				pathAppend(nppIssueLog, issueFn);
 
-				std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-				std::string msg = converter.to_bytes(_fullPathName);
+				std::string msg = wstring2string(_fullPathName, CP_UTF8);
 				char buf[1024];
 				sprintf(buf, "  in updateTimeStamp(): timeStampLive (%lu/%lu) < _timeStamp (%lu/%lu)", timeStampLive.dwLowDateTime, timeStampLive.dwHighDateTime, _timeStamp.dwLowDateTime, _timeStamp.dwHighDateTime);
 				msg += buf;
@@ -343,8 +341,7 @@ bool Buffer::checkFileState() // returns true if the status has been changed (it
 					wstring nppIssueLog = nppParam.getUserPath();
 					pathAppend(nppIssueLog, issueFn);
 
-					std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-					std::string msg = converter.to_bytes(_fullPathName);
+					std::string msg = wstring2string(_fullPathName, CP_UTF8);
 					char buf[1024];
 					sprintf(buf, "  in checkFileState(): attributes.ftLastWriteTime (%lu/%lu) < _timeStamp (%lu/%lu)", attributes.ftLastWriteTime.dwLowDateTime, attributes.ftLastWriteTime.dwHighDateTime, _timeStamp.dwLowDateTime, _timeStamp.dwHighDateTime);
 					msg += buf;
@@ -1089,7 +1086,7 @@ bool FileManager::backupCurrentBuffer()
 			{
 				size_t lengthDoc = _pNotepadPlus->_pEditView->getCurrentDocLen();
 				char* buf = (char*)_pNotepadPlus->_pEditView->execute(SCI_GETCHARACTERPOINTER);	//to get characters directly from Scintilla buffer
-				boolean isWrittenSuccessful = false;
+				bool isWrittenSuccessful = false;
 
 				if (encoding == -1) //no special encoding; can be handled directly by Utf8_16_Write
 				{
@@ -1251,7 +1248,7 @@ SavingStatus FileManager::saveBuffer(BufferID id, const wchar_t* filename, bool 
 
 		size_t lengthDoc = _pscratchTilla->getCurrentDocLen();
 		char* buf = (char*)_pscratchTilla->execute(SCI_GETCHARACTERPOINTER);	//to get characters directly from Scintilla buffer
-		boolean isWrittenSuccessful = false;
+		bool isWrittenSuccessful = false;
 
 		if (encoding == -1) //no special encoding; can be handled directly by Utf8_16_Write
 		{
