@@ -1,6 +1,20 @@
 Notepad++ v8.7.5 Support Black Lives Matter edition:
 
 1. Support of Black Lives Matter
+2. Fix nfo file losing modification issue (regression from v8.7.4).
+3. Fix network file wrong modification detection (regression from v8.7.1).
+4. Fix regression "Open Selected PathName(s)" command not working while all selected.
+5. Fix unusuability after deleting files in split view.
+6. Fix unsaved documents lost on next launch if portable Notepad++ change path.    
+7. Refactoring for the better performance & smaller binary size.
+8. Improve "Copy Selected Lines" command.
+9. Add Visual Basic function list.
+10. Add Swift, TypeScript, and Go for advanced Auto-indent.
+11. Fix UDL comment line not working due to conflict with stream comment definition.
+12. Enhance "Follow current doc." GUI action/option in Find in files.
+13. Fix Reload Workspace not working.
+14. Add "Show details" functionality in installer.
+
 
 
 Notepad++ v8.7.4 regression-fix & bug-fixes:
@@ -32,7 +46,7 @@ Notepad++ v8.7.2 new features & bug-fixes:
 
 
 Get more info on
-https://notepad-plus-plus.org/downloads/v8.7.4/
+https://notepad-plus-plus.org/downloads/v8.7.5/
 
 
 Included plugins:

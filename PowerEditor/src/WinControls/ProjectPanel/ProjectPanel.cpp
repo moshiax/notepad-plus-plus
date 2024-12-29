@@ -1073,7 +1073,6 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 		case IDM_PROJECT_RELOADWS:
 		{
 			NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
-			bool forceOpen = false;
 			if (_isDirty)
 			{
 				int res = pNativeSpeaker->messageBox("ProjectPanelReloadDirty",
@@ -1082,11 +1081,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 					L"Reload Workspace",
 					MB_YESNO | MB_ICONQUESTION | MB_APPLMODAL);
 
-				if (res == IDYES)
-				{
-					forceOpen = true;
-				}
-				else if (res == IDNO)
+				if (res == IDNO)
 				{
 					return;
 				}
@@ -1094,7 +1089,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 
 			if (doesFileExist(_workSpaceFilePath.c_str()))
 			{
-				openWorkSpace(_workSpaceFilePath.c_str(), forceOpen);
+				openWorkSpace(_workSpaceFilePath.c_str(), true);
 			}
 			else
 			{
@@ -1147,6 +1142,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 				_treeView.removeItem(hTreeItem);
 				setWorkSpaceDirty(true);
 			}
+
 			if (getNodeType(parent) == nodeType_folder)
 				_treeView.setItemImage(parent, INDEX_CLOSED_NODE, INDEX_CLOSED_NODE);
 		}
