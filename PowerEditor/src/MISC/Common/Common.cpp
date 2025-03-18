@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#include <windows.h>
 #include <algorithm>
 #include <stdexcept>
 #include <shlwapi.h>
@@ -1903,3 +1904,116 @@ bool doesPathExist(const wchar_t* path, DWORD milliSec2wait, bool* isTimeoutReac
 	getFileAttributesExWithTimeout(path, &attributes, milliSec2wait, isTimeoutReached);
 	return (attributes.dwFileAttributes != INVALID_FILE_ATTRIBUTES);
 }
+
+
+#if defined(__GNUC__)
+#define LAMBDA_STDCALL __attribute__((__stdcall__))
+#else
+#define LAMBDA_STDCALL 
+#endif
+
+// check if the window rectangle intersects with any currently active monitor's working area
+// (this func handles also possible extended monitors mode aka the MS Virtual Screen)
+bool isWindowVisibleOnAnyMonitor(const RECT& rectWndIn)
+{
+	struct Param4InOut
+	{
+		const RECT& rectWndIn;
+		bool isWndVisibleOut = false;
+	};
+
+	// callback func to check for intersection with each existing monitor
+	auto callback = []([[maybe_unused]] HMONITOR hMon, [[maybe_unused]] HDC hdc, LPRECT lprcMon, LPARAM lpInOut) -> BOOL LAMBDA_STDCALL
+	{
+		Param4InOut* paramInOut = reinterpret_cast<Param4InOut*>(lpInOut);
+		RECT rectIntersection{};
+		if (::IntersectRect(&rectIntersection, &(paramInOut->rectWndIn), lprcMon))
+		{
+			paramInOut->isWndVisibleOut = true; // the window is at least partially visible on this monitor
+			return FALSE; // ok, stop the enumeration
+		}
+		return TRUE; // continue enumeration as no intersection yet
+	};
+
+	// get scaled Virtual Screen size (scaled coordinates are saved by the Notepad++ into config.xml)
+	// - for unscaled, one has to 1st set the SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) & then use GetSystemMetricsForDpi with 96
+	// - for getting the VS RECT, we cannot use here the SystemParametersInfo with SPI_GETWORKAREA!
+	//   (while the SPI_SETWORKAREA is working with the VS coordinates the SPI_GETWORKAREA not...)
+	RECT rectVirtualScreen{ ::GetSystemMetrics(SM_XVIRTUALSCREEN), ::GetSystemMetrics(SM_YVIRTUALSCREEN),
+		::GetSystemMetrics(SM_CXVIRTUALSCREEN), ::GetSystemMetrics(SM_CYVIRTUALSCREEN) }; 
+
+	// 1) Before checking for intersections with individual monitors, we verify if the window's rectangle
+	//    is within the MS Virtual Screen area. If it is outside, this func exits with false early,
+	//    as the window in question cannot be visible on any individual monitor present.
+	RECT rectIntersection{};
+	if (!::IntersectRect(&rectIntersection, &rectWndIn, &rectVirtualScreen))
+	{
+		// the window in question is completely outside the overall Virtual Screen bounds
+		return false;
+	}
+
+	// 2) Using the EnumDisplayMonitors WINAPI to check each present monitor's visible area, we ensure that we are only looking
+	//    at monitors that are part of the Virtual Screen but not at Virtual Space coordinates where is NOT a monitor present.
+	Param4InOut param4InOut{ rectWndIn, false };
+	::EnumDisplayMonitors(NULL, &rectVirtualScreen, callback, reinterpret_cast<LPARAM>(&param4InOut));
+	return param4InOut.isWndVisibleOut;
+}
+
+#pragma warning(disable:4996) // 'GetVersionExW': was declared deprecated
+bool isCoreWindows()
+{
+	bool isCoreWindows = false;
+
+	// older Windows (Windows Server 2008 R2-) check 1st
+	OSVERSIONINFOEXW osviex{};
+	osviex.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
+	if (::GetVersionEx(reinterpret_cast<LPOSVERSIONINFOW>(&osviex)))
+	{
+		DWORD dwReturnedProductType = 0;
+		if (::GetProductInfo(osviex.dwMajorVersion, osviex.dwMinorVersion, osviex.wServicePackMajor, osviex.wServicePackMinor, &dwReturnedProductType))
+		{
+			switch (dwReturnedProductType)
+			{
+				case PRODUCT_STANDARD_SERVER_CORE:
+				case PRODUCT_STANDARD_A_SERVER_CORE:
+				case PRODUCT_STANDARD_SERVER_CORE_V:
+				case PRODUCT_STANDARD_SERVER_SOLUTIONS_CORE:
+				case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM_CORE:
+				case PRODUCT_ENTERPRISE_SERVER_CORE:
+				case PRODUCT_ENTERPRISE_SERVER_CORE_V:
+				case PRODUCT_DATACENTER_SERVER_CORE:
+				case PRODUCT_DATACENTER_A_SERVER_CORE:
+				case PRODUCT_DATACENTER_SERVER_CORE_V:
+				case PRODUCT_STORAGE_STANDARD_SERVER_CORE:
+				case PRODUCT_STORAGE_WORKGROUP_SERVER_CORE:
+				case PRODUCT_STORAGE_ENTERPRISE_SERVER_CORE:
+				case PRODUCT_STORAGE_EXPRESS_SERVER_CORE:
+				case PRODUCT_WEB_SERVER_CORE:
+					isCoreWindows = true;
+			}
+		}
+	}
+
+	if (!isCoreWindows)
+	{
+		// in Core Server 2012+, the recommended way to determine is via the Registry
+		HKEY hKey = nullptr;
+		if (::RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+			0, KEY_READ, &hKey) == ERROR_SUCCESS)
+		{
+			constexpr size_t bufLen = 127;
+			wchar_t wszBuf[bufLen + 1]{}; // +1 ... to be always NULL-terminated string
+			DWORD dataSize = sizeof(wchar_t) * bufLen;
+			if (::RegQueryValueExW(hKey, L"InstallationType", nullptr, nullptr, reinterpret_cast<LPBYTE>(&wszBuf), &dataSize) == ERROR_SUCCESS)
+			{
+				if (lstrcmpiW(wszBuf, L"Server Core") == 0)
+					isCoreWindows = true;
+			}
+			::RegCloseKey(hKey);
+			hKey = nullptr;
+		}
+	}
+
+	return isCoreWindows;
+}
+#pragma warning(default:4996)

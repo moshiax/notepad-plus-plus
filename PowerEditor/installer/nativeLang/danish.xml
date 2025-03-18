@@ -910,7 +910,6 @@ The comments are here for explanation, it's not necessary to translate them.
 					<Item id="6109" name="Nedton inaktive faner"/>
 					<Item id="6110" name="Vis farvet linie over aktiv fane"/>
 
-					<Item id="6111" name="Vis statuslinie"/>
 					<Item id="6112" name="Vis luk på hver fane"/>
 					<Item id="6113" name="Dobbeltklik lukker dokument"/>
 					<Item id="6118" name="Skjul"/>
@@ -1246,7 +1245,6 @@ Brug mellemrum til at angive flere markører."/>
 					<Item id="6324" name="Dokumentskifter (Ctrl+tabulator)"/>
 					<Item id="6331" name="Vis kun filnavn i titellinien"/>
 					<Item id="6334" name="Registrér tegnsæt automatisk"/>
-					<Item id="6349" name="Brug DirectWrite (kan forbedre gengivelse af specialtegn. Notepad++ skal genstartes)"/>
 					<Item id="6337" name="Arbejdsrum filtype:"/>
 					<Item id="6114" name="Aktivér"/>
 					<Item id="6117" name="Skift mellem senest brugte"/>

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-	- last change:  Notepad++ 8.7.5  20/Dec/2024  by Ondřej Müller (mullero@email.cz)
+	- last change:  Notepad++ 8.7.8  24/Feb/2025  by Ondřej Müller (mullero@email.cz)
 	- N++ Community QA:  https://notepad-plus-plus.org/community/topic/87/czech-translations
 	- contributors:  Ondřej Müller (mullero@email.cz), Tomáš Hrouda (gobbet@centrum.cz), Martin Darebný (darBis)
 	- the most recent version of this file can be downloaded from the project master-branch here: https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/PowerEditor/installer/nativeLang/czech.xml
 -->
 <NotepadPlus>
-	<Native-Langue name="Čeština" filename="czech.xml" version="8.7.5">
+	<Native-Langue name="Čeština" filename="czech.xml" version="8.7.8">
 		<Menu>
 			<Main>
 				<!-- Main Menu Entries -->
@@ -839,6 +839,7 @@
 					<Item id="21101" name="Výchozí nastavení návrhu"/>
 					<Item id="21105" name="Dokumentace"/>
 					<Item id="21102" name="Návrhář"/>
+					<Item id="21103" name="Online nápověda pro Uživatelsky definované syntaxe"/>
 					<Item id="21106" name="Sbalit do kompaktní formy (i prázdné řádky)"/>
 					<Item id="21201" name="Nastavení klíčových slov pro otevření složky"/>
 					<Item id="21301" name="Nastavení klíčových slov pro uzavření složky"/>
@@ -994,6 +995,7 @@
 					<Item id="6108" name="Uzamknout (nelze přetahovat karty)"/>
 					<Item id="6109" name="Změnit barvu pozadí neaktivní karty"/>
 					<Item id="6110" name="Zobrazovat barevný pruh na aktivní kartě"/>
+					<Item id="6111" name="Zobrazovat tlačítka i na neaktivních kartách"/>
 					<Item id="6112" name="Přidat zavírací tlačítko každé kartě"/>
 					<Item id="6113" name="Dvojité kliknutí zavře kartu"/>
 					<Item id="6114" name="Povolit přepínání mezi dokumenty"/>
@@ -1004,13 +1006,13 @@
 					<Item id="6119" name="Více řad"/>
 					<Item id="6120" name="Vertikální"/>
 					<Item id="6121" name="Ukončit při uzavření poslední karty"/>
-					<Item id="6122" name="Skrýt menu (klávesa Alt nebo F10 slouží jako přepínač)"/>
+					<Item id="6122" name="Skrýt (klávesa Alt nebo F10 slouží jako přepínač)"/>
 					<Item id="6123" name="Lokalizace"/>
 					<Item id="6128" name="Alternativní ikony"/>
 					<Item id="6129" name="Fluent UI: malé ikony s výplní"/>
 					<Item id="6130" name="Fluent UI: velké ikony s výplní"/>
 					<Item id="6131" name="Hlavní menu"/>
-					<Item id="6132" name="Skrýt ovládací prvky ＋ ▼ ✕ menu vpravo nahoře (vyžaduje restart Notepadu++)"/>
+					<Item id="6132" name="Skrýt ovládací prvky ＋ ▼ ✕"/>
 					<Item id="6133" name="Stavový řádek"/>
 					<Item id="6134" name="Skrýt"/>
 				</Global>
@@ -1240,6 +1242,12 @@
 						<Element name="Zavírat do"/>
 						<Element name="Minimalizovat a Zavírat do"/>
 					</ComboBox>
+					<ComboBox id="6362">
+						<Element name="GDI (nejkompatibilnější)"/>
+						<Element name="DirectWrite (výchozí)"/>
+						<Element name="DirectWrite (zachovávat snímky)"/>
+						<Element name="DirectWrite (vykreslovat do GDI DC)"/>
+					</ComboBox>
 					<Item id="6114" name="Povolit přepínání"/>
 					<Item id="6117" name="Povolit MRU (nedávno použité)"/>
 					<Item id="6308" name="oznamovací oblast"/>
@@ -1255,9 +1263,9 @@
 					<Item id="6344" name="Náhled na neaktivní dokument"/>
 					<Item id="6345" name="Na kartě (tab) dokumentu"/>
 					<Item id="6346" name="Na přehledné mapě dokumentu"/>
-					<Item id="6349" name="Používat DirectWrite (může zlepšit zobrazení speciálních znaků, vyžadován restart Notepadu++)"/>
 					<Item id="6360" name="Ztlumit všechny zvuky"/>
 					<Item id="6361" name="Povolit potvrzovací dialog &quot;Uložit všechny&quot;"/>
+					<Item id="6363" name="vykreslovací režim"/>
 				</MISC>
 				<Backup title="Zálohování">
 					<Item id="6219" name="Uživatelsky definovaný adresář pro zálohování"/>
@@ -1514,7 +1522,7 @@ Vaše pracovní plocha nebyla uložena."/><!-- HowToReproduce: this message prev
 			<UDLNewNameError title="Chyba UDL" message="Tento název je již využíván jiným jazykem/syntaxí, prosím zadejte jiný."/>
 			<UDLRemoveCurrentLang title="Odstranění aktuální syntaxe" message="Jste si jisti?"/>
 			<SCMapperDoDeleteOrNot title="Jste si jisti?" message="Jste si jisti, že chcete smazat tuto klávesovou zkratku / příkaz?"/>
-			<FindCharRangeValueError title="Problém s rozsahem hodnoty" message="Měli byste napsat hodnotu z rozsahu 0 až 255."/>
+			<FindCharRangeValueError title="Problém s rozsahem hodnoty" message="Měli byste napsat hodnotu z rozsahu 0 až 255."/><!-- HowToReproduce: Search menu, then Find characters in range, select Custom range, enter 999 in either edit box, press Find. -->
 			<OpenInAdminMode title="Ukládání selhalo" message="Soubor nemůže být uložen a může být chráněn proti zápisu. Chcete zkusit spustit Notepad++ s právy administrátora?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Ukládání selhalo" message="Soubor nemůže být uložen a může být chráněn proti zápisu. Chcete zkusit spustit Notepad++ s právy administrátora?"/>
 			<OpenInAdminModeFailed title="Otevření s administrátorskými právy selhalo" message="Notepad++ nemůže být spuštěn s právy administrátora."/>
@@ -1551,6 +1559,10 @@ Stisknutím tlačítka OK otevřete dialogové okno Najít nebo ho přepnete do 
 			
 Pokud opravdu potřebujete funkci zpětného vyhledávání při regulárních výrazech, pokyny pro její zapnutí najdete v uživatelské příručce."/>
 			<PrintError title="0" message="Nelze spustit tisk dokumentu."/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
+			<FindAutoChangeOfInSelectionWarning title="Upozornění pro vyhledávání" message="Stav zaškrtávacího políčka &quot;Ve vybraném&quot; byl automaticky změněn (ovládáno položkou v Nastavení > Volby... > Vyhledávání).
+
+Před provedením akce si prosím nejprve ověřte nastavené podmínky."/> <!-- HowToReproduce: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
+			<Need2Restart2ShowMenuShortcuts title="Restartujte Notepad++" message="Je zapotřebí restartovat Notepad++, aby se vpravo mohly zobrazit ovládací prvky hlavního menu."/>
 		</MessageBox>
 		
 		<ClipboardHistory>
@@ -1833,6 +1845,7 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 Pokud zvolíte Pokročilý režim, ale nebudete upravovat soubory výše zmíněných jazyků, zůstane odsazení v Základním režimu."/>
 			<!-- Don't translate "&quot;Global override&quot; and &quot;Default Style&quot; -->
 			<global-override-tip value="Použitím &quot;Global override&quot; přepíšete nastavení ve všech stylech pro všechny syntaxe. Nejspíše chcete namísto toho použít nastavení &quot;Default Style&quot;."/>
+			<scintillaRenderingTechnology-tip value="Může zlepšit vykreslování speciálních znaků nebo vyřešit některé problémy s grafikou. Restartujte Notepad++, aby se změny projevily."/>
 		</MiscStrings>
 
 	</Native-Langue>
