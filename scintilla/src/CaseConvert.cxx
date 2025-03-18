@@ -749,7 +749,7 @@ void CaseConverter::SetupConversions(CaseConversion conversion) {
 			break;
 		}
 		if (!converted.empty()) {
-			const int character = UnicodeFromUTF8(originUTF8);
+			const int character = UnicodeFromUTF8(reinterpret_cast<const unsigned char *>(originUTF8.data()));
 			Add(character, converted);
 		}
 	}

@@ -108,11 +108,6 @@ TEST_CASE("UniConversion") {
 		REQUIRE(UnicodeFromUTF8(s) == 0x10348);
 	}
 
-	SECTION("UnicodeFromUTF8 StringView") {
-		const unsigned char s[]="\xF0\x90\x8D\x88";
-		REQUIRE(UnicodeFromUTF8(s) == 0x10348);
-	}
-
 	// UTF16FromUTF8
 
 	SECTION("UTF16FromUTF8 ASCII") {

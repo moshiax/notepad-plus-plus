@@ -228,11 +228,6 @@ SectionGroup "Function List Files" functionListComponent
 		File ".\functionList\nppexec.xml"
 	${MementoSectionEnd}
 
-	${MementoSection} "SAS" SAS_FL
-		SetOutPath "$INSTDIR\functionList"
-		File ".\functionList\sas.xml"
-	${MementoSectionEnd}
-
 	SetOverwrite off
 	${MementoSection} "Override Map" OverrideMap_FL
 		SetOutPath "$INSTDIR\functionList"
@@ -413,10 +408,6 @@ SectionGroup un.functionListComponent
 
 	Section un.NppExecScript_FL
 		Delete "$INSTDIR\functionList\nppexec.xml"
-	SectionEnd
-
-	Section un.SAS_FL
-		Delete "$INSTDIR\functionList\sas.xml"
 	SectionEnd
 
 SectionGroupEnd

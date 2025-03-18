@@ -1192,11 +1192,9 @@ bool NppParameters::load()
 			::CreateDirectory(_userPath.c_str(), NULL);
 
 		_appdataNppDir = _userPluginConfDir = _userPath;
-
 		pathAppend(_userPluginConfDir, L"plugins");
 		if (!doesDirectoryExist(_userPluginConfDir.c_str()))
 			::CreateDirectory(_userPluginConfDir.c_str(), NULL);
-
 		pathAppend(_userPluginConfDir, L"Config");
 		if (!doesDirectoryExist(_userPluginConfDir.c_str()))
 			::CreateDirectory(_userPluginConfDir.c_str(), NULL);
@@ -1498,21 +1496,6 @@ bool NppParameters::load()
 		isAllLoaded = false;
 	}
 
-	//---------------------------------------//
-	// toolbarButtonsConf.xml : for per user //
-	//---------------------------------------//
-	std::wstring toolbarButtonsConfXmlPath(_userPath);
-	pathAppend(toolbarButtonsConfXmlPath, L"toolbarButtonsConf.xml");
-
-	_pXmlToolButtonsConfDoc = new TiXmlDocument(toolbarButtonsConfXmlPath);
-	loadOkay = _pXmlToolButtonsConfDoc->LoadFile();
-	if (!loadOkay)
-	{
-		delete _pXmlToolButtonsConfDoc;
-		_pXmlToolButtonsConfDoc = nullptr;
-		isAllLoaded = false;
-	}
-
 	//------------------------------//
 	// shortcuts.xml : for per user //
 	//------------------------------//
@@ -1739,7 +1722,6 @@ void NppParameters::destroyInstance()
 
 	delete _pXmlNativeLangDocA;
 	delete _pXmlToolIconsDoc;
-	delete _pXmlToolButtonsConfDoc;
 	delete _pXmlShortcutDocA;
 	delete _pXmlContextMenuDocA;
 	delete _pXmlTabContextMenuDocA;
@@ -4880,15 +4862,13 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 		{
 			bool isFailed = false;
 			int oldValue = _nppGUI._tabStatus;
-			_nppGUI._tabStatus = 0;
-
 			const wchar_t* val = element->Attribute(L"dragAndDrop");
 			if (val)
 			{
 				if (!lstrcmp(val, L"yes"))
-					_nppGUI._tabStatus |= TAB_DRAGNDROP;
+					_nppGUI._tabStatus = TAB_DRAGNDROP;
 				else if (!lstrcmp(val, L"no"))
-					_nppGUI._tabStatus |= 0;
+					_nppGUI._tabStatus = 0;
 				else
 					isFailed = true;
 			}
@@ -4950,17 +4930,6 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			else
 			{
 				_nppGUI._tabStatus |= TAB_PINBUTTON;
-			}
-
-			val = element->Attribute(L"buttonsOninactiveTabs");
-			if (val)
-			{
-				if (!lstrcmp(val, L"yes"))
-					_nppGUI._tabStatus |= TAB_INACTIVETABSHOWBUTTON;
-				else if (!lstrcmp(val, L"no"))
-					_nppGUI._tabStatus |= 0;
-				else
-					isFailed = true;
 			}
 
 			val = element->Attribute(L"doubleClick2Close");
@@ -6232,22 +6201,7 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 
 			const wchar_t * optNameWriteTechnologyEngine = element->Attribute(L"writeTechnologyEngine");
 			if (optNameWriteTechnologyEngine)
-			{
-				if (lstrcmp(optNameWriteTechnologyEngine, L"0") == 0)
-					_nppGUI._writeTechnologyEngine = defaultTechnology;
-				else if (lstrcmp(optNameWriteTechnologyEngine, L"1") == 0)
-					_nppGUI._writeTechnologyEngine = directWriteTechnology;
-				else if (lstrcmp(optNameWriteTechnologyEngine, L"2") == 0)
-					_nppGUI._writeTechnologyEngine = directWriteRetainTechnology;
-				else if (lstrcmp(optNameWriteTechnologyEngine, L"3") == 0)
-					_nppGUI._writeTechnologyEngine = directWriteDcTechnology;
-				else if (lstrcmp(optNameWriteTechnologyEngine, L"4") == 0)
-					_nppGUI._writeTechnologyEngine = directWriteDX11Technology;
-				else if (lstrcmp(optNameWriteTechnologyEngine, L"5") == 0)
-					_nppGUI._writeTechnologyEngine = directWriteTechnologyUnavailable;
-				//else
-					// retain default value preset
-			}
+				_nppGUI._writeTechnologyEngine = (lstrcmp(optNameWriteTechnologyEngine, L"1") == 0) ? directWriteTechnology : defaultTechnology;
 
 			const wchar_t * optNameFolderDroppedOpenFiles = element->Attribute(L"isFolderDroppedOpenFiles");
 			if (optNameFolderDroppedOpenFiles)
@@ -6945,32 +6899,40 @@ void NppParameters::feedDockingManager(TiXmlNode *node)
 			int w = FWI_PANEL_WH_DEFAULT;
 			int h = FWI_PANEL_WH_DEFAULT;
 
-			bool bInputDataOk = false;
 			if (floatElement->Attribute(L"x", &x))
 			{
-				if (floatElement->Attribute(L"y", &y))
+				if ((x > (maxMonitorSize.cx - 1)) || (x < 0))
+					x = 0; // invalid, reset
+			}
+			if (floatElement->Attribute(L"y", &y))
+			{
+				if ((y > (maxMonitorSize.cy - 1)) || (y < 0))
+					y = 0; // invalid, reset
+			}
+			if (floatElement->Attribute(L"width", &w))
+			{
+				if (w > maxMonitorSize.cx)
 				{
-					if (floatElement->Attribute(L"width", &w))
-					{
-						if (floatElement->Attribute(L"height", &h))
-						{
-							RECT rect{ x,y,w,h };
-							bInputDataOk = isWindowVisibleOnAnyMonitor(rect);
-						}
-					}
+					w = maxMonitorSize.cx; // invalid, reset
+				}
+				else
+				{
+					if (w < _nppGUI._dockingData._minFloatingPanelSize.cx)
+						w = _nppGUI._dockingData._minFloatingPanelSize.cx; // invalid, reset
 				}
 			}
-
-			if (!bInputDataOk)
+			if (floatElement->Attribute(L"height", &h))
 			{
-				// reset to adjusted factory defaults
-				// (and the panel will automatically be on the current primary monitor due to the x,y == 0,0)
-				x = 0;
-				y = 0;
-				w = _nppGUI._dockingData._minFloatingPanelSize.cx;
-				h = _nppGUI._dockingData._minFloatingPanelSize.cy + FWI_PANEL_WH_DEFAULT;
+				if (h > maxMonitorSize.cy)
+				{
+					h = maxMonitorSize.cy; // invalid, reset
+				}
+				else
+				{
+					if (h < _nppGUI._dockingData._minFloatingPanelSize.cy)
+						h = _nppGUI._dockingData._minFloatingPanelSize.cy; // invalid, reset
+				}
 			}
-
 			_nppGUI._dockingData._floatingWindowInfo.push_back(FloatingWindowInfo(cont, x, y, w, h));
 		}
 	}
@@ -7302,10 +7264,10 @@ void NppParameters::createXmlTreeFromGUIParams()
 		TiXmlElement *GUIConfigElement = (newGUIRoot->InsertEndChild(TiXmlElement(L"GUIConfig")))->ToElement();
 		GUIConfigElement->SetAttribute(L"name", L"TabBar");
 
-		const wchar_t *pStr = (_nppGUI._tabStatus & TAB_DRAGNDROP) ? L"yes" : L"no";
+		const wchar_t *pStr = (_nppGUI._tabStatus & TAB_DRAWTOPBAR) ? L"yes" : L"no";
 		GUIConfigElement->SetAttribute(L"dragAndDrop", pStr);
 
-		pStr = (_nppGUI._tabStatus & TAB_DRAWTOPBAR) ? L"yes" : L"no";
+		pStr = (_nppGUI._tabStatus & TAB_DRAGNDROP) ? L"yes" : L"no";
 		GUIConfigElement->SetAttribute(L"drawTopBar", pStr);
 
 		pStr = (_nppGUI._tabStatus & TAB_DRAWINACTIVETAB) ? L"yes" : L"no";
@@ -7319,9 +7281,6 @@ void NppParameters::createXmlTreeFromGUIParams()
 
 		pStr = (_nppGUI._tabStatus & TAB_PINBUTTON) ? L"yes" : L"no";
 		GUIConfigElement->SetAttribute(L"pinButton", pStr);
-
-		pStr = (_nppGUI._tabStatus & TAB_INACTIVETABSHOWBUTTON) ? L"yes" : L"no";
-		GUIConfigElement->SetAttribute(L"buttonsOninactiveTabs", pStr);
 
 		pStr = (_nppGUI._tabStatus & TAB_DBCLK2CLOSE) ? L"yes" : L"no";
 		GUIConfigElement->SetAttribute(L"doubleClick2Close", pStr);
@@ -8358,9 +8317,6 @@ int NppParameters::langTypeToCommandID(LangType lt) const
 
 		case L_TOML:
 			id = IDM_LANG_TOML; break;
-			
-		case L_SAS:
-			id = IDM_LANG_SAS; break;
 			
 		case L_SEARCHRESULT :
 			id = -1;	break;

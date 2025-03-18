@@ -766,6 +766,7 @@
 					<Item id="6109" name="Darken inactive tabs"/>
 					<Item id="6110" name="Draw a coloured bar on active tab"/>
 
+					<Item id="6111" name="Show status bar"/>
 					<Item id="6112" name="Show close button on each tab"/>
 					<Item id="6113" name="Double click to close document"/>
 					<Item id="6118" name="Folaigh"/>
@@ -1004,6 +1005,7 @@ You can define several column markers by using white space to separate the diffe
 					<Item id="6324" name="Document Switcher (Ctrl+TAB)"/>
 					<Item id="6331" name="Show only filename in title bar"/>
 					<Item id="6334" name="Autodetect character encoding"/>
+					<Item id="6349" name="Use DirectWrite (May improve rendering special characters, need to restart Notepad++)"/>
 					<Item id="6337" name="Workspace file ext.:"/>
 					<Item id="6114" name="Cumasaigh"/>
 					<Item id="6117" name="Cumasaigh MRU behaviour"/>

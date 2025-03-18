@@ -38,6 +38,7 @@ struct UnknownReleaser {
 	}
 };
 
+
 /// Find a function in a DLL and convert to a function pointer.
 /// This avoids undefined and conditionally defined behaviour.
 template<typename T>

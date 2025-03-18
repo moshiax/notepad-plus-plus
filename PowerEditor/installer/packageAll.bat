@@ -111,8 +111,6 @@ copy /Y ..\src\contextMenu.xml .\minimalist\
 If ErrorLevel 1 goto End
 copy /Y ..\src\tabContextMenu_example.xml .\minimalist\
 If ErrorLevel 1 goto End
-copy /Y ..\src\toolbarButtonsConf_example.xml .\minimalist\
-If ErrorLevel 1 goto End
 copy /Y ..\src\shortcuts.xml .\minimalist\
 If ErrorLevel 1 goto End
 copy /Y ..\bin\doLocalConf.xml .\minimalist\
@@ -148,8 +146,6 @@ copy /Y ..\src\contextMenu.xml .\minimalist64\
 If ErrorLevel 1 goto End
 copy /Y ..\src\tabContextMenu_example.xml .\minimalist64\
 If ErrorLevel 1 goto End
-copy /Y ..\src\toolbarButtonsConf_example.xml .\minimalist64\
-If ErrorLevel 1 goto End
 copy /Y ..\src\shortcuts.xml .\minimalist64\
 If ErrorLevel 1 goto End
 copy /Y ..\bin\doLocalConf.xml .\minimalist64\
@@ -184,8 +180,6 @@ If ErrorLevel 1 goto End
 copy /Y ..\src\contextMenu.xml .\minimalistArm64\
 If ErrorLevel 1 goto End
 copy /Y ..\src\tabContextMenu_example.xml .\minimalistArm64\
-If ErrorLevel 1 goto End
-copy /Y ..\src\toolbarButtonsConf_example.xml .\minimalistArm64\
 If ErrorLevel 1 goto End
 copy /Y ..\src\shortcuts.xml .\minimalistArm64\
 If ErrorLevel 1 goto End
@@ -273,8 +267,6 @@ copy /Y ..\src\contextMenu.xml .\zipped.package.release\
 If ErrorLevel 1 goto End
 copy /Y ..\src\tabContextMenu_example.xml .\zipped.package.release\
 If ErrorLevel 1 goto End
-copy /Y ..\src\toolbarButtonsConf_example.xml .\zipped.package.release\
-If ErrorLevel 1 goto End
 copy /Y ..\src\shortcuts.xml .\zipped.package.release\
 If ErrorLevel 1 goto End
 copy /Y ..\bin\doLocalConf.xml .\zipped.package.release\
@@ -303,8 +295,6 @@ copy /Y ..\src\contextMenu.xml .\zipped.package.release64\
 If ErrorLevel 1 goto End
 copy /Y ..\src\tabContextMenu_example.xml .\zipped.package.release64\
 If ErrorLevel 1 goto End
-copy /Y ..\src\toolbarButtonsConf_example.xml .\zipped.package.release64\
-If ErrorLevel 1 goto End
 copy /Y ..\src\shortcuts.xml .\zipped.package.release64\
 If ErrorLevel 1 goto End
 copy /Y ..\bin\doLocalConf.xml .\zipped.package.release64\
@@ -331,8 +321,6 @@ If ErrorLevel 1 goto End
 copy /Y ..\src\contextMenu.xml .\zipped.package.releaseArm64\
 If ErrorLevel 1 goto End
 copy /Y ..\src\tabContextMenu_example.xml .\zipped.package.releaseArm64\
-If ErrorLevel 1 goto End
-copy /Y ..\src\toolbarButtonsConf_example.xml .\zipped.package.releaseArm64\
 If ErrorLevel 1 goto End
 copy /Y ..\src\shortcuts.xml .\zipped.package.releaseArm64\
 If ErrorLevel 1 goto End

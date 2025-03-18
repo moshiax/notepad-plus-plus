@@ -854,6 +854,7 @@ The comments are here for explanation, it's not necessary to translate them.
 					<Item id="6109" name="Ilundu fitxa ez-aktiboak"/>
 					<Item id="6110" name="Marraztu barra koloreduna fitxa aktiboan"/>
 
+					<Item id="6111" name="Erakutsi egoera-barra"/>
 					<Item id="6112" name="Erakutsi itxi botoia fitxa bakoitzean"/>
 					<Item id="6113" name="Klik bikoitza fitxategia ixteko"/>
 					<Item id="6118" name="Ezkutatu"/>
@@ -1147,6 +1148,7 @@ Zutabe-markatzaile anitz zehaztu ditzakezu zenbakiak zuriuneen bidez banatuta."/
 					<Item id="6324" name="Dokumentu Aldatzailea (Ctrl+TAB)"/>
 					<Item id="6331" name="Erakutsi soilik fitxategi-izena izenburu-barran"/>
 					<Item id="6334" name="Antzeman automatikoki karaktere-kodifikazioa"/>
+					<Item id="6349" name="Erabili DirectWrite (Karaktere berezien errenderizatzea hobetu dezake, Notepad++ berrabiaraztea behar du)"/>
 					<Item id="6337" name="Lan eremuaren fitxategi-luzapena:"/>
 					<Item id="6114" name="Gaitu"/>
 					<Item id="6117" name="Gaitu MRU jokaera (Gehien Erabilitakoak)"/>

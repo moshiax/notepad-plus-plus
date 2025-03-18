@@ -23,6 +23,9 @@
 #define _WIN32_IE	0x0600
 #endif //_WIN32_IE
 
+bool DocTabView::_hideTabBarStatus = false;
+
+
 int docTabIconIDs[] = { IDI_SAVED_ICON,  IDI_UNSAVED_ICON,  IDI_READONLY_ICON,  IDI_MONITORING_ICON };
 int docTabIconIDs_darkMode[] = { IDI_SAVED_DM_ICON,  IDI_UNSAVED_DM_ICON,  IDI_READONLY_DM_ICON,  IDI_MONITORING_DM_ICON };
 int docTabIconIDs_alt[] = { IDI_SAVED_ALT_ICON, IDI_UNSAVED_ALT_ICON, IDI_READONLY_ALT_ICON, IDI_MONITORING_ICON };
@@ -246,10 +249,8 @@ void DocTabView::setBuffer(size_t index, BufferID id)
 
 void DocTabView::reSizeTo(RECT & rc)
 {
-	NppParameters& nppParam = NppParameters::getInstance();
-	int borderWidth = nppParam.getSVP()._borderWidth;
-	NppGUI& nppGUI = nppParam.getNppGUI();
-	if (nppGUI._tabStatus & TAB_HIDE)
+	int borderWidth = ((NppParameters::getInstance()).getSVP())._borderWidth;
+	if (_hideTabBarStatus)
 	{
 		RECT rcTmp = rc;
 		TabBar::reSizeTo(rcTmp);

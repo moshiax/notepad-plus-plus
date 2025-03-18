@@ -40,10 +40,10 @@ public:
 	[[nodiscard]] Sci::Position Length() const noexcept {
 		return s.length();
 	}
-	[[nodiscard]] char CharAt(Sci::Position index) const override {
+	char CharAt(Sci::Position index) const override {
 		return s.at(index);
 	}
-	[[nodiscard]] Sci::Position MovePositionOutsideChar(Sci::Position pos, [[maybe_unused]] Sci::Position moveDir) const noexcept override {
+	Sci::Position MovePositionOutsideChar(Sci::Position pos, [[maybe_unused]] Sci::Position moveDir) const noexcept override {
 		return pos;
 	}
 	[[nodiscard]] std::string GetCharRange(Sci::Position position, Sci::Position lengthRetrieve) const {

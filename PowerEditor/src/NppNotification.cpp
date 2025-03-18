@@ -147,7 +147,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			}
 			else if ((notification->margin == ScintillaEditView::_SC_MARGE_SYMBOL) && !notification->modifiers)
 			{
-				if (!_pEditView->hidelineMarkerClicked(lineClick))
+				if (!_pEditView->markerMarginClick(lineClick))
 					bookmarkToggle(lineClick);
 			}
 			break;
@@ -178,6 +178,28 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 				}
 			}
 			break;
+		}
+
+		case SCN_FOLDINGSTATECHANGED:
+		{
+			if ((notification->nmhdr.hwndFrom == _mainEditView.getHSelf()) || (notification->nmhdr.hwndFrom == _subEditView.getHSelf()))
+			{
+				size_t lineClicked = notification->line;
+
+				if (!_isFolding)
+				{
+					int urlAction = (NppParameters::getInstance()).getNppGUI()._styleURL;
+					Buffer* currentBuf = _pEditView->getCurrentBuffer();
+					if (urlAction != urlDisable && currentBuf->allowClickableLink())
+					{
+						addHotSpot();
+					}
+				}
+
+				if (_pDocMap)
+					_pDocMap->fold(lineClicked, _pEditView->isFolded(lineClicked));
+			}
+			return TRUE;
 		}
 
 		case SCN_CHARADDED:
@@ -560,30 +582,6 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 		// ======= End of SCN_*
 		//
 
-		case SCN_FOLDINGSTATECHANGED: // Notification not part of Scintilla, but Notepad++ added
-		{
-			if ((notification->nmhdr.hwndFrom == _mainEditView.getHSelf()) || (notification->nmhdr.hwndFrom == _subEditView.getHSelf()))
-			{
-				size_t lineClicked = notification->line;
-
-				/*
-				if (!_isFolding)
-				{
-					int urlAction = (NppParameters::getInstance()).getNppGUI()._styleURL;
-					Buffer* currentBuf = _pEditView->getCurrentBuffer();
-					if (urlAction != urlDisable && currentBuf->allowClickableLink())
-					{
-						addHotSpot();
-					}
-				}
-				*/
-
-				if (_pDocMap)
-					_pDocMap->fold(lineClicked, _pEditView->isFolded(lineClicked));
-			}
-
-			return TRUE;
-		}
 
 		case TCN_MOUSEHOVERING:
 		case TCN_MOUSEHOVERSWITCHING:
@@ -1102,9 +1100,8 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 
 			_tabPopupMenu.enableItem(IDM_FILE_SAVEAS, !isInaccessible);
 			_tabPopupMenu.enableItem(IDM_FILE_RENAME, !isInaccessible);
-			
-			NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
-			bool isTabPinEnabled = nppGUI._tabStatus & TAB_PINBUTTON;
+
+			bool isTabPinEnabled = TabBarPlus::drawTabPinButton();
 			wstring newName;
 			if (isTabPinEnabled)
 			{

@@ -901,6 +901,7 @@ Last modified by Sahid A.Z. on 3/3/2023
 					<Item id="6109" name="Tab nonaktif gelap"/>
 					<Item id="6110" name="Bilah tab-aktif berwarna"/>
 
+					<Item id="6111" name="Tampilkan bilah status"/>
 					<Item id="6112" name="Tampilkan tombol tutup di setiap tab"/>
 					<Item id="6113" name="Klik ganda untuk menutup dokumen"/>
 					<Item id="6118" name="Sembunyikan"/>
@@ -1236,6 +1237,7 @@ Anda dapat mendefinisikan beberapa penanda kolom dengan menggunakan spasi putih 
 					<Item id="6324" name="Penukar Dokumen (Ctrl+TAB)"/>
 					<Item id="6331" name="Tampilkan nama berkas saja di bilah judul"/>
 					<Item id="6334" name="Otomatis deteksi pengodean karakter"/>
+					<Item id="6349" name="Gunakan DirectWrite (Mungkin meningkatkan perenderan karakter khusus, perlu memulai ulang Notepad++)"/>
 					<Item id="6337" name="Ekst. berkas Ruang Kerja:"/>
 					<Item id="6114" name="Aktifkan"/>
 					<Item id="6117" name="Aktifkan perilaku MRU"/>

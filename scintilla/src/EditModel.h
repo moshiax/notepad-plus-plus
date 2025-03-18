@@ -21,36 +21,6 @@ public:
 	Caret() noexcept;
 };
 
-enum class UndoRedo { undo, redo };
-
-// Selection stack is sparse so use a map
-
-struct SelectionWithScroll {
-	std::string selection;
-	Sci::Line topLine = 0;
-};
-
-using SelectionStack = std::map<int, SelectionWithScroll>;
-
-struct SelectionHistory {
-	int indexCurrent = 0;
-	std::string ssCurrent;
-	SelectionStack stack;
-};
-
-struct ModelState : ViewState {
-	SelectionHistory historyForUndo;
-	SelectionHistory historyForRedo;
-	void RememberSelectionForUndo(int index, const Selection &sel);
-	void ForgetSelectionForUndo() noexcept;
-	void RememberSelectionOntoStack(int index, Sci::Line topLine);
-	void RememberSelectionForRedoOntoStack(int index, const Selection &sel, Sci::Line topLine);
-	SelectionWithScroll SelectionFromStack(int index, UndoRedo history) const;
-	virtual void TruncateUndo(int index) final;
-};
-
-using ModelStateShared = std::shared_ptr<ModelState>;
-
 class EditModel {
 public:
 	bool inOverstrike;
@@ -87,10 +57,6 @@ public:
 
 	Document *pdoc;
 
-	Scintilla::UndoSelectionHistoryOption undoSelectionHistoryOption = UndoSelectionHistoryOption::Disabled;
-	bool needRedoRemembered = false;
-	ModelStateShared modelState;
-
 	EditModel();
 	// Deleted so EditModel objects can not be copied.
 	EditModel(const EditModel &) = delete;
@@ -109,9 +75,6 @@ public:
 	const char *GetFoldDisplayText(Sci::Line lineDoc) const noexcept;
 	InSelection LineEndInSelection(Sci::Line lineDoc) const;
 	[[nodiscard]] int GetMark(Sci::Line line) const;
-
-	void EnsureModelState();
-	void ChangeUndoSelectionHistory(Scintilla::UndoSelectionHistoryOption undoSelectionHistoryOptionNew);
 };
 
 }

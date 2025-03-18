@@ -293,7 +293,7 @@ void DocumentMap::doMove()
 
 void DocumentMap::fold(size_t line, bool foldOrNot)
 {
-	_pMapView->fold(line, foldOrNot, false);
+	_pMapView->fold(line, foldOrNot);
 }
 
 void DocumentMap::foldAll(bool mode)

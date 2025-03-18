@@ -2244,11 +2244,6 @@ intptr_t CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 							findAllIn(FILES_IN_DIR);
 							nppParamInst._isFindReplacing = false;
 						}
-						else
-						{
-							// move input focus to "Directory:" edit control
-							::SendMessage(_hSelf, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(::GetDlgItem(_hSelf, IDD_FINDINFILES_DIR_COMBO)), TRUE);
-						}
 					}
 					else if (_currentStatus == FINDINPROJECTS_DLG)
 					{
@@ -2300,11 +2295,6 @@ intptr_t CALLBACK FindReplaceDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 							::SendMessage(_hParent, WM_REPLACEINFILES, 0, 0);
 							nppParamInst._isFindReplacing = false;
 						}
-					}
-					else
-					{
-						// move input focus to "Directory:" edit control
-						::SendMessage(_hSelf, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(::GetDlgItem(_hSelf, IDD_FINDINFILES_DIR_COMBO)), TRUE);
 					}
 				}
 				return TRUE;
@@ -5581,7 +5571,7 @@ void Finder::beginNewFilesSearch()
 	_nbFoundFiles = 0;
 
 	// fold all old searches (1st level only)
-	_scintView.foldLevel(searchHeaderLevel - SC_FOLDLEVELBASE, fold_collapse);
+	_scintView.collapse(searchHeaderLevel - SC_FOLDLEVELBASE, fold_collapse);
 }
 
 void Finder::finishFilesSearch(int count, int searchedCount, bool searchedEntireNotSelection, const FindOption* pFindOpt)
@@ -5726,7 +5716,7 @@ intptr_t CALLBACK Finder::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 
 				case NPPM_INTERNAL_SCINTILLAFINDERUNCOLLAPSE :
 				{
-					_scintView.foldAll(fold_expand);
+					_scintView.foldAll(fold_uncollapse);
 					return TRUE;
 				}
 

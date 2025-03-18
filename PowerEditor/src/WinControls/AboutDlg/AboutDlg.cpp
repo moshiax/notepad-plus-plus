@@ -62,8 +62,7 @@ intptr_t CALLBACK AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
             //_pageLink.create(::GetDlgItem(_hSelf, IDC_AUTHOR_NAME), L"https://blacklivesmatter.com");
             
 			_pageLink.init(_hInst, _hSelf);
-            //_pageLink.create(::GetDlgItem(_hSelf, IDC_HOME_ADDR), L"https://notepad-plus-plus.org/");
-			_pageLink.create(::GetDlgItem(_hSelf, IDC_AUTHOR_NAME), L"https://notepad-plus-plus.org/news/v878-we-are-with-ukraine/");
+            _pageLink.create(::GetDlgItem(_hSelf, IDC_HOME_ADDR), L"https://notepad-plus-plus.org/");
 
 			return TRUE;
 		}
@@ -109,8 +108,7 @@ intptr_t CALLBACK AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 			const int iconSize = _dpiManager.scale(80);
 			if (_hIcon == nullptr)
 			{
-				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_CHAMELEON_DM : IDI_CHAMELEON), iconSize, iconSize, &_hIcon);
-				DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(IDI_WITHUKRAINE), iconSize, iconSize, &_hIcon);
+				DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_CHAMELEON_DM : IDI_CHAMELEON), iconSize, iconSize, &_hIcon);
 				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_TAIWANSSOVEREIGNTY_DM : IDI_TAIWANSSOVEREIGNTY), iconSize, iconSize, &_hIcon);
 			}
 
@@ -237,31 +235,9 @@ intptr_t CALLBACK DebugInfoDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			_debugInfoStr += nppGui._keepSessionAbsentFileEntries ? L"ON" : L"OFF";
 			_debugInfoStr += L"\r\n";
 
-			// SC_TECHNOLOGY
-			_debugInfoStr += L"Scintilla Rendering Mode : ";
-			switch (nppGui._writeTechnologyEngine)
-			{
-				case defaultTechnology:
-					_debugInfoStr += L"SC_TECHNOLOGY_DEFAULT (0)";
-					break;
-				case directWriteTechnology:
-					_debugInfoStr += L"SC_TECHNOLOGY_DIRECTWRITE (1)";
-					break;
-				case directWriteRetainTechnology:
-					_debugInfoStr += L"SC_TECHNOLOGY_DIRECTWRITERETAIN (2)";
-					break;
-				case directWriteDcTechnology:
-					_debugInfoStr += L"SC_TECHNOLOGY_DIRECTWRITEDC (3)";
-					break;
-				case directWriteDX11Technology:
-					_debugInfoStr += L"SC_TECHNOLOGY_DIRECT_WRITE_1 (4)";
-					break;
-				case directWriteTechnologyUnavailable:
-					_debugInfoStr += L"DirectWrite Technology Unavailable (5, same as SC_TECHNOLOGY_DEFAULT)";
-					break;
-				default:
-					_debugInfoStr += L"unknown (" + std::to_wstring(nppGui._writeTechnologyEngine) + L")";
-			}
+			// DirectWrite
+			_debugInfoStr += L"DirectWrite : ";
+			_debugInfoStr += (nppGui._writeTechnologyEngine == directWriteTechnology) ? L"ON" : L"OFF";
 			_debugInfoStr += L"\r\n";
 
 			// Multi-instance

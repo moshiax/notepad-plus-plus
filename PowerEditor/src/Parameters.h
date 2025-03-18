@@ -64,19 +64,18 @@ const int UDD_DOCKED = 2; // 0000 0010
 // 2 : 0000 0010 hide & docked
 // 3 : 0000 0011 show & docked
 
-const int TAB_DRAWTOPBAR            =    1;    // 0000 0000 0000 0001
-const int TAB_DRAWINACTIVETAB       =    2;    // 0000 0000 0000 0010
-const int TAB_DRAGNDROP             =    4;    // 0000 0000 0000 0100
-const int TAB_REDUCE                =    8;    // 0000 0000 0000 1000
-const int TAB_CLOSEBUTTON           =   16;    // 0000 0000 0001 0000
-const int TAB_DBCLK2CLOSE           =   32;    // 0000 0000 0010 0000
-const int TAB_VERTICAL              =   64;    // 0000 0000 0100 0000
-const int TAB_MULTILINE             =  128;    // 0000 0000 1000 0000
-const int TAB_HIDE                  =  256;    // 0000 0001 0000 0000
-const int TAB_QUITONEMPTY           =  512;    // 0000 0010 0000 0000
-const int TAB_ALTICONS              = 1024;    // 0000 0100 0000 0000
-const int TAB_PINBUTTON             = 2048;    // 0000 1000 0000 0000
-const int TAB_INACTIVETABSHOWBUTTON = 4096;    // 0001 0000 0000 0000
+const int TAB_DRAWTOPBAR        =    1;    //0000 0000 0001
+const int TAB_DRAWINACTIVETAB   =    2;    //0000 0000 0010
+const int TAB_DRAGNDROP         =    4;    //0000 0000 0100
+const int TAB_REDUCE            =    8;    //0000 0000 1000
+const int TAB_CLOSEBUTTON       =   16;    //0000 0001 0000
+const int TAB_DBCLK2CLOSE       =   32;    //0000 0010 0000
+const int TAB_VERTICAL          =   64;    //0000 0100 0000
+const int TAB_MULTILINE         =  128;    //0000 1000 0000
+const int TAB_HIDE              =  256;    //0001 0000 0000
+const int TAB_QUITONEMPTY       =  512;    //0010 0000 0000
+const int TAB_ALTICONS          = 1024;    //0100 0000 0000
+const int TAB_PINBUTTON         = 2048;    //1000 0000 0000
 
 const bool activeText = true;
 const bool activeNumeric = false;
@@ -117,8 +116,7 @@ enum ChangeDetect { cdDisabled = 0x0, cdEnabledOld = 0x01, cdEnabledNew = 0x02, 
 enum BackupFeature {bak_none = 0, bak_simple = 1, bak_verbose = 2};
 enum OpenSaveDirSetting {dir_followCurrent = 0, dir_last = 1, dir_userDef = 2};
 enum MultiInstSetting {monoInst = 0, multiInstOnSession = 1, multiInst = 2};
-enum writeTechnologyEngine { defaultTechnology = 0, directWriteTechnology = 1, directWriteRetainTechnology = 2,
-	directWriteDcTechnology = 3, directWriteDX11Technology = 4, directWriteTechnologyUnavailable = 5 };
+enum writeTechnologyEngine {defaultTechnology = 0, directWriteTechnology = 1};
 enum urlMode {urlDisable = 0, urlNoUnderLineFg, urlUnderLineFg, urlNoUnderLineBg, urlUnderLineBg,
               urlMin = urlDisable,
               urlMax = urlUnderLineBg};
@@ -1630,8 +1628,7 @@ public:
 
 	TiXmlDocumentA * getNativeLangA() const {return _pXmlNativeLangDocA;};
 
-	TiXmlDocument* getCustomizedToolIcons() const {return _pXmlToolIconsDoc;};
-	TiXmlDocument* getCustomizedToolButtons() const {return _pXmlToolButtonsConfDoc;};
+	TiXmlDocument * getCustomizedToolIcons() const {return _pXmlToolIconsDoc;};
 
 	bool isTransparentAvailable() const {
 		return (_winVersion >= WV_VISTA);
@@ -1854,8 +1851,6 @@ public:
 	bool isStylerDocLoaded() const { return _pXmlUserStylerDoc != nullptr; };
 
 	ColumnEditorParam _columnEditParam;
-	unsigned long getScintillaModEventMask() const { return _sintillaModEventMask; };
-	void addScintillaModEventMask(unsigned long mask2Add) { _sintillaModEventMask |= mask2Add; };
 
 private:
 	NppParameters();
@@ -1876,7 +1871,6 @@ private:
 	TiXmlDocument *_pXmlUserLangDoc = nullptr; // userDefineLang.xml
 	std::vector<UdlXmlFileState> _pXmlUserLangsDoc; // userDefineLang customized XMLs
 	TiXmlDocument *_pXmlToolIconsDoc = nullptr; // toolbarIcons.xml
-	TiXmlDocument * _pXmlToolButtonsConfDoc = nullptr; // toolbarButtonsConf.xml
 
 	TiXmlDocumentA *_pXmlShortcutDocA = nullptr; // shortcuts.xml
 
@@ -2105,5 +2099,5 @@ private:
 	int getCmdIdFromMenuEntryItemName(HMENU mainMenuHadle, const std::wstring& menuEntryName, const std::wstring& menuItemName); // return -1 if not found
 	int getPluginCmdIdFromMenuEntryItemName(HMENU pluginsMenu, const std::wstring& pluginName, const std::wstring& pluginCmdName); // return -1 if not found
 	winVer getWindowsVersion();
-	unsigned long _sintillaModEventMask = SC_MOD_DELETETEXT | SC_MOD_INSERTTEXT | SC_PERFORMED_UNDO | SC_PERFORMED_REDO | SC_MOD_CHANGEINDICATOR;
+
 };

@@ -40,7 +40,20 @@ void ControlsTab::reSizeTo(RECT & rc)
 {
 	TabBar::reSizeTo(rc);
 	rc.left += marge;
-	rc.top += marge;	
+	rc.top += marge;
+	
+	//-- We do those dirty things 
+	//-- because it's a "vertical" tab control
+    if (_isVertical)
+    {
+	    rc.right -= 40;
+	    rc.bottom -= 20;
+	    if (getRowCount() == 2)
+	    {
+		    rc.right -= 20;
+	    }
+    }
+	//-- end of dirty things
 	rc.bottom -= 55;
 	rc.right -= 20;
 

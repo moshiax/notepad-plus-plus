@@ -18,8 +18,6 @@
 #include <string_view>
 #include <stdexcept>
 #include <optional>
-#include <map>
-#include <algorithm>
 
 #include "ILoader.h"
 #include "ILexer.h"

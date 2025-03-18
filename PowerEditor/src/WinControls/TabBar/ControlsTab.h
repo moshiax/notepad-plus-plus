@@ -41,7 +41,8 @@ public :
 
 	virtual void init(HINSTANCE hInst, HWND hwnd, bool isVertical = false, bool isMultiLine = false)
 	{
-		TabBar::init(hInst, hwnd, isVertical, isMultiLine);
+		_isVertical = isVertical;
+		TabBar::init(hInst, hwnd, false, isMultiLine);
 	}
 
 	void createTabs(WindowVector & winVector);

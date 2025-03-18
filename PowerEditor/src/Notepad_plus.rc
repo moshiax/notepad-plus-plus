@@ -64,7 +64,6 @@ IDI_CHAMELEON_DM                ICON      "icons/dark/about/chameleon.ico"
 //IDI_SAMESEXMARRIAGE           ICON      "icons/same-sexMarriageTaiwan.ico"
 //IDI_TAIWANSSOVEREIGNTY        ICON      "icons/standard/about/logo_taiwan-grey.ico"
 //IDI_TAIWANSSOVEREIGNTY_DM     ICON      "icons/dark/about/logo_taiwan-grey.ico"
-IDI_WITHUKRAINE                 ICON      "icons/standard/about/withUkraine.ico"
 IDI_ICONABSENT                  ICON      "icons/iconAbsent.ico"
 
 //
@@ -328,28 +327,24 @@ IDR_FILEBROWSER                 BITMAP    "icons/standard/toolbar/fileBrowser.bm
 IDR_FILEMONITORING              BITMAP    "icons/standard/toolbar/monitoring.bmp"
 
 IDR_CLOSETAB                    ICON        "icons/standard/tabbar/closeTabButton.ico"
-IDR_CLOSETAB_INACT              ICON        "icons/standard/tabbar/closeTabButton_hoverOnTab.ico"
-IDR_CLOSETAB_INACT_EMPTY        ICON        "icons/standard/tabbar/empty.ico"
+IDR_CLOSETAB_INACT              ICON        "icons/standard/tabbar/empty.ico"
 IDR_CLOSETAB_HOVERIN            ICON        "icons/standard/tabbar/closeTabButton_hoverIn.ico"
 IDR_CLOSETAB_HOVERONTAB         ICON        "icons/standard/tabbar/closeTabButton_hoverOnTab.ico"
 IDR_CLOSETAB_PUSH               ICON        "icons/standard/tabbar/closeTabButton_push.ico"
 IDR_CLOSETAB_DM                 ICON        "icons/dark/tabbar/closeTabButton.ico"
-IDR_CLOSETAB_INACT_DM           ICON        "icons/dark/tabbar/closeTabButton.ico"
-IDR_CLOSETAB_INACT_EMPTY_DM     ICON        "icons/dark/tabbar/empty.ico"
+IDR_CLOSETAB_INACT_DM           ICON        "icons/dark/tabbar/empty.ico"
 IDR_CLOSETAB_HOVERIN_DM         ICON        "icons/dark/tabbar/closeTabButton_hoverIn.ico"
 IDR_CLOSETAB_HOVERONTAB_DM      ICON        "icons/dark/tabbar/closeTabButton_hoverOnTab.ico"
 IDR_CLOSETAB_PUSH_DM            ICON        "icons/dark/tabbar/closeTabButton_push.ico"
 
 IDR_PINTAB                      ICON        "icons/standard/tabbar/pinTabButton.ico"
-IDR_PINTAB_INACT                ICON        "icons/standard/tabbar/pinTabButton.ico"
-IDR_PINTAB_INACT_EMPTY          ICON        "icons/standard/tabbar/empty.ico"
+IDR_PINTAB_INACT                ICON        "icons/standard/tabbar/empty.ico"
 IDR_PINTAB_HOVERIN              ICON        "icons/standard/tabbar/pinTabButton_pinned.ico"
 IDR_PINTAB_HOVERONTAB           ICON        "icons/standard/tabbar/pinTabButton.ico"
 IDR_PINTAB_PINNED               ICON        "icons/standard/tabbar/pinTabButton_pinned.ico"
 IDR_PINTAB_PINNEDHOVERIN        ICON        "icons/standard/tabbar/pinTabButton.ico"
 IDR_PINTAB_DM                   ICON        "icons/dark/tabbar/pinTabButton.ico"
-IDR_PINTAB_INACT_DM             ICON        "icons/dark/tabbar/pinTabButton.ico"
-IDR_PINTAB_INACT_EMPTY_DM       ICON        "icons/dark/tabbar/empty.ico"
+IDR_PINTAB_INACT_DM             ICON        "icons/dark/tabbar/empty.ico"
 IDR_PINTAB_HOVERIN_DM           ICON        "icons/dark/tabbar/pinTabButton_pinned.ico"
 IDR_PINTAB_HOVERONTAB_DM        ICON        "icons/dark/tabbar/pinTabButton.ico"
 IDR_PINTAB_PINNED_DM            ICON        "icons/dark/tabbar/pinTabButton_pinned.ico"
@@ -1052,7 +1047,6 @@ BEGIN
         MENUITEM "Resource file",           IDM_LANG_RC
         MENUITEM "Ruby",                    IDM_LANG_RUBY
         MENUITEM "Rust",                    IDM_LANG_RUST
-        MENUITEM "SAS",                     IDM_LANG_SAS
         MENUITEM "Shell",                   IDM_LANG_BASH
         MENUITEM "Scheme",                  IDM_LANG_SCHEME
         MENUITEM "Smalltalk",               IDM_LANG_SMALLTALK
@@ -1203,7 +1197,6 @@ BEGIN
     END
     POPUP "S"
     BEGIN
-        MENUITEM "SAS",                   IDM_LANG_SAS
         MENUITEM "Shell",                 IDM_LANG_BASH
         MENUITEM "Scheme",                IDM_LANG_SCHEME
         MENUITEM "Smalltalk",             IDM_LANG_SMALLTALK
@@ -1385,10 +1378,6 @@ BEGIN
 	//LTEXT           "Support Black Lives Matter", IDC_AUTHOR_NAME, 85, 38, 130, 10
     LTEXT           "SUPPORT",IDC_STATIC,21,58,47,8
     LTEXT           "https://blacklivesmatter.com",IDC_HOME_ADDR,50,56,126,10
-	//LTEXT           "Support Taiwan's return to the UN", IDC_AUTHOR_NAME, 85, 38, 130, 10
-	LTEXT           "We are with Ukraine", IDC_AUTHOR_NAME, 85, 38, 130, 10
-    //LTEXT           "Home:",IDC_STATIC,21,58,47,8
-    //LTEXT           "https://notepad-plus-plus.org/",IDC_HOME_ADDR,50,56,126,10
     GROUPBOX        "GNU General Public Licence",IDC_STATIC,20,75,230,138,BS_CENTER
     DEFPUSHBUTTON   "OK",IDOK,110,220,50,14
     // IDC_LICENCE_EDIT should be the last line, don't know why
@@ -1442,10 +1431,7 @@ BEGIN
     CONTROL         "&Line",IDC_RADIO_GOTOLINE,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,8,5,80,10
     CONTROL         "&Offset",IDC_RADIO_GOTOOFFSET,"Button",BS_AUTORADIOBUTTON,98,5,80,10
     LTEXT           "You are here:",ID_URHERE_STATIC,8,25,95,8
-
-    //LTEXT           "0123456789",ID_CURRLINE,106,25,45,8
-    EDITTEXT        ID_CURRLINE_EDIT,104,24,71,12,ES_NUMBER | ES_READONLY
-
+    LTEXT           "0123456789",ID_CURRLINE,106,25,45,8
     LTEXT           "You want to &go to:",ID_UGO_STATIC,8,40,95,8
     EDITTEXT        ID_GOLINE_EDIT,104,38,71,12,ES_NUMBER
     LTEXT           "You can't go further than:",ID_NOMORETHAN_STATIC,8,55,95,8

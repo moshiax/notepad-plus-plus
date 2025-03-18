@@ -150,17 +150,11 @@ Notepad_plus::Notepad_plus()
 	nppParam.setNativeLangSpeaker(&_nativeLangSpeaker);
 
 	TiXmlDocument *toolIconsDocRoot = nppParam.getCustomizedToolIcons();
-	TiXmlDocument *toolButtonsDocRoot = nppParam.getCustomizedToolButtons();
 
 	if (toolIconsDocRoot)
 	{
-		_toolBar.initTheme(toolIconsDocRoot);
-	}
-
-	if (toolButtonsDocRoot)
-	{
-		_toolBar.initHideButtonsConf(toolButtonsDocRoot, toolBarIcons, sizeof(toolBarIcons) / sizeof(ToolBarButtonUnit));
-	}
+        _toolBar.initTheme(toolIconsDocRoot);
+    }
 
 	// Determine if user is administrator.
 	BOOL is_admin;
@@ -242,6 +236,7 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	const ScintillaViewParams & svp = nppParam.getSVP();
 
 	int tabBarStatus = nppGUI._tabStatus;
+	TabBarPlus::setReduced((tabBarStatus & TAB_REDUCE) != 0, &_mainDocTab);
 
 	const int tabIconSet = NppDarkMode::getTabIconSet(NppDarkMode::isEnabled());
 	unsigned char indexDocTabIcon = 0;
@@ -391,21 +386,32 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	_mainEditView.execute(SCI_STYLESETCHECKMONOSPACED, STYLE_DEFAULT, true);
 	_subEditView.execute(SCI_STYLESETCHECKMONOSPACED, STYLE_DEFAULT, true);
 
-	const auto& hf = _mainDocTab.getFont(nppGUI._tabStatus & TAB_REDUCE);
+	TabBarPlus::doDragNDrop(true);
+
+	const auto& hf = _mainDocTab.getFont(TabBarPlus::isReduced());
 	if (hf)
 	{
 		::SendMessage(_mainDocTab.getHSelf(), WM_SETFONT, reinterpret_cast<WPARAM>(hf), MAKELPARAM(TRUE, 0));
 		::SendMessage(_subDocTab.getHSelf(), WM_SETFONT, reinterpret_cast<WPARAM>(hf), MAKELPARAM(TRUE, 0));
 	}
 
-	int tabDpiDynamicalHeight = _mainDocTab.dpiManager().scale(nppGUI._tabStatus & TAB_REDUCE ? g_TabHeight : g_TabHeightLarge);
-	int tabDpiDynamicalWidth = _mainDocTab.dpiManager().scale(nppGUI._tabStatus & TAB_PINBUTTON ? g_TabWidthButton : g_TabWidth);
+	int tabDpiDynamicalHeight = _mainDocTab.dpiManager().scale(TabBarPlus::isReduced() ? g_TabHeight : g_TabHeightLarge);
+	int tabDpiDynamicalWidth = _mainDocTab.dpiManager().scale(TabBarPlus::drawTabCloseButton() ? g_TabWidthButton : g_TabWidth);
 
 	TabCtrl_SetItemSize(_mainDocTab.getHSelf(), tabDpiDynamicalWidth, tabDpiDynamicalHeight);
 	TabCtrl_SetItemSize(_subDocTab.getHSelf(), tabDpiDynamicalWidth, tabDpiDynamicalHeight);
 
 	_mainDocTab.display();
-	TabBarPlus::triggerOwnerDrawTabbar(&(_mainDocTab.dpiManager()));
+
+
+	TabBarPlus::doDragNDrop((tabBarStatus & TAB_DRAGNDROP) != 0);
+	TabBarPlus::setDrawTopBar((tabBarStatus & TAB_DRAWTOPBAR) != 0, &_mainDocTab);
+	TabBarPlus::setDrawInactiveTab((tabBarStatus & TAB_DRAWINACTIVETAB) != 0, &_mainDocTab);
+	TabBarPlus::setDrawTabCloseButton((tabBarStatus & TAB_CLOSEBUTTON) != 0, &_mainDocTab);
+	TabBarPlus::setDrawTabPinButton((tabBarStatus & TAB_PINBUTTON) != 0, &_mainDocTab);
+	TabBarPlus::setDbClk2Close((tabBarStatus & TAB_DBCLK2CLOSE) != 0);
+	TabBarPlus::setVertical((tabBarStatus & TAB_VERTICAL) != 0);
+	drawTabbarColoursFromStylerArray();
 
 	//
 	// Initialize the default foreground & background color
@@ -785,7 +791,23 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	//Hide or show the right shortcuts "＋" "▼" "✕" of main menu bar
 	if (nppGUI._hideMenuRightShortcuts)
 	{
-		::SendMessage(_pPublicInterface->getHSelf(), NPPM_INTERNAL_HIDEMENURIGHTSHORTCUTS, 0, 0);
+		int nbRemoved = 0;
+		const int bufferSize = 64;
+		wchar_t buffer[bufferSize];
+		int nbItem = GetMenuItemCount(_mainMenuHandle);
+		for (int i = nbItem - 1; i >= 0; --i)
+		{
+			::GetMenuStringW(_mainMenuHandle, i, buffer, bufferSize, MF_BYPOSITION);
+			if (lstrcmp(buffer, L"✕") == 0 || lstrcmp(buffer, L"▼") == 0 || lstrcmp(buffer, L"＋") == 0)
+			{
+				::RemoveMenu(_mainMenuHandle, i, MF_BYPOSITION);
+				++nbRemoved;
+			}
+			if (nbRemoved == 3)
+				break;
+		}
+		if (nbRemoved > 0)
+			::DrawMenuBar(hwnd);
 	}
 
 	//
@@ -895,6 +917,18 @@ bool Notepad_plus::saveGUIParams()
 	nppGUI._toolbarShow = _rebarTop.getIDVisible(REBAR_BAR_TOOLBAR);
 	nppGUI._toolBarStatus = _toolBar.getState();
 
+	nppGUI._tabStatus = (TabBarPlus::doDragNDropOrNot() ? TAB_DRAWTOPBAR : 0) | \
+						(TabBarPlus::drawTopBar() ? TAB_DRAGNDROP : 0) | \
+						(TabBarPlus::drawInactiveTab() ? TAB_DRAWINACTIVETAB : 0) | \
+						(TabBarPlus::isReduced() ? TAB_REDUCE : 0) | \
+						(TabBarPlus::drawTabCloseButton() ? TAB_CLOSEBUTTON : 0) | \
+						(TabBarPlus::drawTabPinButton() ? TAB_PINBUTTON : 0) | \
+						(TabBarPlus::isDbClk2Close() ? TAB_DBCLK2CLOSE : 0) | \
+						(TabBarPlus::isVertical() ? TAB_VERTICAL : 0) | \
+						(TabBarPlus::isMultiLine() ? TAB_MULTILINE : 0) |\
+						(nppGUI._tabStatus & TAB_HIDE) | \
+						(nppGUI._tabStatus & TAB_QUITONEMPTY) | \
+						(nppGUI._tabStatus & TAB_ALTICONS);
 	nppGUI._splitterPos = _subSplitter.isVertical()?POS_VERTICAL:POS_HORIZOTAL;
 	UserDefineDialog *udd = _pEditView->getUserDefineDlg();
 	bool b = udd->isDocked();
@@ -3853,31 +3887,38 @@ BOOL Notepad_plus::processTabSwitchAccel(MSG* msg) const
 
 void Notepad_plus::setLanguage(LangType langType)
 {
-	unsigned long MODEVENTMASK_ON = NppParameters::getInstance().getScintillaModEventMask();
-
-	if (bothActive() && (_mainEditView.getCurrentBufferID() == _subEditView.getCurrentBufferID()))
+	//Add logic to prevent changing a language when a document is shared between two views
+	//If so, release one document
+	bool reset = false;
+	Document prev = 0;
+	if (bothActive())
 	{
-		// Add logic to prevent changing a language when a document is shared between two views
-		// If so, release one document
-
-		_subEditView.saveCurrentPos();
-		Document subPrev = _subEditView.execute(SCI_GETDOCPOINTER);
-		_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_OFF);
-		_subEditView.execute(SCI_SETDOCPOINTER, 0, 0);
-		_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_ON);
-
-		(_mainEditView.getCurrentBuffer())->setLangType(langType);
-
-		_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_OFF);
-		_subEditView.execute(SCI_SETDOCPOINTER, 0, subPrev);
-		_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_ON);
-		_subEditView.maintainStateForNpc();
-		_subEditView.setCRLF();
-		_subEditView.restoreCurrentPosPreStep();
+		if (_mainEditView.getCurrentBufferID() == _subEditView.getCurrentBufferID())
+		{
+			reset = true;
+			_subEditView.saveCurrentPos();
+			prev = _subEditView.execute(SCI_GETDOCPOINTER);
+			_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_OFF);
+			_subEditView.execute(SCI_SETDOCPOINTER, 0, 0);
+			_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_ON);
+		}
+	}
+	
+	if (reset)
+	{
+		_mainEditView.getCurrentBuffer()->setLangType(langType);
 	}
 	else
 	{
-		(_pEditView->getCurrentBuffer())->setLangType(langType);
+		_pEditView->getCurrentBuffer()->setLangType(langType);
+	}
+
+	if (reset)
+	{
+		_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_OFF);
+		_subEditView.execute(SCI_SETDOCPOINTER, 0, prev);
+		_subEditView.execute(SCI_SETMODEVENTMASK, MODEVENTMASK_ON);
+		_subEditView.restoreCurrentPosPreStep();
 	}
 }
 
@@ -4065,8 +4106,6 @@ LangType Notepad_plus::menuID2LangType(int cmdID)
             return L_RAKU;
         case IDM_LANG_TOML:
             return L_TOML;
-        case IDM_LANG_SAS:
-            return L_SAS;
         case IDM_LANG_USER:
             return L_USER;
 		default:
@@ -4995,7 +5034,6 @@ bool Notepad_plus::activateBuffer(BufferID id, int whichOne, bool forceApplyHili
 		// Before switching off, synchronize backup file
 		MainFileManager.backupCurrentBuffer();
 	}
-
 	Buffer * pBuf = MainFileManager.getBufferByID(id);
 	bool reload = pBuf->getNeedReload();
 	if (reload)
@@ -5003,7 +5041,6 @@ bool Notepad_plus::activateBuffer(BufferID id, int whichOne, bool forceApplyHili
 		MainFileManager.reloadBuffer(id);
 		pBuf->setNeedReload(false);
 	}
-
 	if (whichOne == MAIN_VIEW)
 	{
 		if (_mainDocTab.activateBuffer(id))	//only activate if possible
@@ -6426,21 +6463,21 @@ void Notepad_plus::drawTabbarColoursFromStylerArray()
 {
 	Style *stActText = getStyleFromName(TABBAR_ACTIVETEXT);
 	if (stActText && static_cast<long>(stActText->_fgColor) != -1)
-		TabBarPlus::setColour(stActText->_fgColor, TabBarPlus::activeText, &(_mainDocTab.dpiManager()));
+		TabBarPlus::setColour(stActText->_fgColor, TabBarPlus::activeText, &_mainDocTab);
 
 	Style *stActfocusTop = getStyleFromName(TABBAR_ACTIVEFOCUSEDINDCATOR);
 	if (stActfocusTop && static_cast<long>(stActfocusTop->_fgColor) != -1)
-		TabBarPlus::setColour(stActfocusTop->_fgColor, TabBarPlus::activeFocusedTop, &(_mainDocTab.dpiManager()));
+		TabBarPlus::setColour(stActfocusTop->_fgColor, TabBarPlus::activeFocusedTop, &_mainDocTab);
 
 	Style *stActunfocusTop = getStyleFromName(TABBAR_ACTIVEUNFOCUSEDINDCATOR);
 	if (stActunfocusTop && static_cast<long>(stActunfocusTop->_fgColor) != -1)
-		TabBarPlus::setColour(stActunfocusTop->_fgColor, TabBarPlus::activeUnfocusedTop, &(_mainDocTab.dpiManager()));
+		TabBarPlus::setColour(stActunfocusTop->_fgColor, TabBarPlus::activeUnfocusedTop, &_mainDocTab);
 
 	Style *stInact = getStyleFromName(TABBAR_INACTIVETEXT);
 	if (stInact && static_cast<long>(stInact->_fgColor) != -1)
-		TabBarPlus::setColour(stInact->_fgColor, TabBarPlus::inactiveText, &(_mainDocTab.dpiManager()));
+		TabBarPlus::setColour(stInact->_fgColor, TabBarPlus::inactiveText, &_mainDocTab);
 	if (stInact && static_cast<long>(stInact->_bgColor) != -1)
-		TabBarPlus::setColour(stInact->_bgColor, TabBarPlus::inactiveBg, &(_mainDocTab.dpiManager()));
+		TabBarPlus::setColour(stInact->_bgColor, TabBarPlus::inactiveBg, &_mainDocTab);
 }
 
 void Notepad_plus::drawAutocompleteColoursFromTheme(COLORREF fgColor, COLORREF bgColor)
@@ -6677,6 +6714,14 @@ void Notepad_plus::notifyBufferChanged(Buffer * buffer, int mask)
 		return;
 	}
 
+	if (mask & (BufferChangeLanguage))
+	{
+		if (mainActive)
+			_autoCompleteMain.setLanguage(buffer->getLangType());
+		if (subActive)
+			_autoCompleteSub.setLanguage(buffer->getLangType());
+	}
+
 	if ((currentView() == MAIN_VIEW) && !mainActive)
 		return;
 
@@ -6699,13 +6744,10 @@ void Notepad_plus::notifyBufferChanged(Buffer * buffer, int mask)
 	{
 		checkLangsMenu(-1);	//let Notepad++ do search for the item
 		setLangStatus(buffer->getLangType());
-		if (mainActive)
+		if (_mainEditView.getCurrentBuffer() == buffer)
 			_autoCompleteMain.setLanguage(buffer->getLangType());
-		else if (subActive)
+		else if (_subEditView.getCurrentBuffer() == buffer)
 			_autoCompleteSub.setLanguage(buffer->getLangType());
-
-		if (_pFuncList && (!_pFuncList->isClosed()) && _pFuncList->isVisible())
-			_pFuncList->reload(); // sync FL with the current buffer lang
 
 		SCNotification scnN{};
 		scnN.nmhdr.code = NPPN_LANGCHANGED;
@@ -8051,7 +8093,6 @@ static const QuoteParams quotes[] =
 	{L"Ricky Gervais", QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, L"Feel free to mock my lack of belief in any Gods.\nIt won't hurt my feelings.\nIt won't damage my faith in reason.\nAnd I won't kill you for it."},
 	{L"Kahlil Gibran", QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, L"Your children are not your children.\nThey are the sons and daughters of Life's longing for itself.\nThey come through you but not from you,\nAnd though they are with you, yet they belong not to you.\n\nYou may give them your love but not your thoughts,\nFor they have their own thoughts.\nYou may house their bodies but not their souls,\nFor their souls dwell in the house of tomorrow,\nwhich you cannot visit, not even in your dreams.\nYou may strive to be like them, but seek not to make them like you.\nFor life goes not backward nor tarries with yesterday.\n\nYou are the bows from which your children as living arrows are sent forth.\nThe archer sees the mark upon the path of the infinite,\nand He bends you with His might that His arrows may go swift and far.\nLet your bending in the archer's hand be for gladness;\nFor even as He loves the arrow that flies, so He loves also the bow that is stable.\n"},
 	{L"Francis Bacon", QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, L"Knowledge is power. France is bacon.\n\nWhen I was young my father said to me: \"Knowledge is power, Francis Bacon.\" I understood it as \"Knowledge is power, France is bacon.\"\n\nFor more than a decade I wondered over the meaning of the second part and what was the surreal linkage between the two. If I said the quote to someone, \"Knowledge is power, France is Bacon\", they nodded knowingly. Or someone might say, \"Knowledge is power\" and I'd finish the quote \"France is Bacon\" and they wouldn't look at me like I'd said something very odd, but thoughtfully agree. I did ask a teacher what did \"Knowledge is power, France is bacon\" mean and got a full 10-minute explanation of the \"knowledge is power\" bit but nothing on \"France is bacon\". When I prompted further explanation by saying \"France is bacon?\" in a questioning tone I just got a \"yes\". At 12 I didn't have the confidence to press it further. I just accepted it as something I'd never understand.\n\nIt wasn't until years later I saw it written down that the penny dropped.\n"},
-	{L"Arthur Schopenhauer", QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, L"The cheapest sort of pride is national pride; for if a man is proud of his own nation,\nit argues that he has no qualities of his own of which he can be proud;\notherwise he would not have recourse to those which he shares with so many millions of his fellowmen.\n"},
 	{L"Space Invaders", QuoteParams::speedOfLight, false, SC_CP_UTF8, L_TEXT, L"\n\n       ▄██▄\n     ▄██████▄           █   █  █▀▀▀\n     ██▄██▄██           █   █  █▄▄\n      ▄▀▄▄▀▄            █ █ █  █\n     ▀ ▀  ▀ ▀           ▀▀ ▀▀  ▀▀▀▀\n\n      ▀▄   ▄▀           ▄█▀▀▀  ▄█▀▀█▄  █▀▄▀█  █▀▀▀\n     ▄█▀███▀█▄          █      █    █  █ ▀ █  █▄▄\n    █ █▀▀▀▀▀█ █         █▄     █▄  ▄█  █   █  █\n       ▀▀ ▀▀             ▀▀▀▀   ▀▀▀▀   ▀   ▀  ▀▀▀▀\n\n     ▄▄█████▄▄          ▀█▀  █▀▄  █\n    ██▀▀███▀▀██          █   █ ▀▄ █\n    ▀▀██▀▀▀██▀▀          █   █  ▀▄█\n    ▄█▀ ▀▀▀ ▀█▄         ▀▀▀  ▀   ▀▀\n\n      ▄▄████▄▄          █▀▀█  █▀▀▀  ▄▀▀▄  ▄█▀▀▀  █▀▀▀\n    ▄██████████▄        █▄▄█  █▄▄   █▄▄█  █      █▄▄ \n  ▄██▄██▄██▄██▄██▄      █     █     █  █  █▄     █   \n    ▀█▀  ▀▀  ▀█▀        ▀     ▀▀▀▀  ▀  ▀   ▀▀▀▀  ▀▀▀▀\n\n"},
 	{L"#JeSuisCharlie", QuoteParams::rapid, false, SC_CP_UTF8, L_TEXT, L"Freedom of expression is like the air we breathe, we don't feel it, until people take it away from us.\n\nFor this reason, Je suis Charlie, not because I endorse everything they published, but because I cherish the right to speak out freely without risk even when it offends others.\nAnd no, you cannot just take someone's life for whatever he/she expressed.\n\nHence this \"Je suis Charlie\" edition.\n"}
 };

@@ -2530,13 +2530,19 @@ void EditView::PaintText(Surface *surfaceWindow, const EditModel &model, const V
 
 		Sci::Line lineDocPrevious = -1;	// Used to avoid laying out one document line multiple times
 		std::shared_ptr<LineLayout> ll;
-		DrawPhase phase = DrawPhase::all;
+		std::vector<DrawPhase> phases;
 		if ((phasesDraw == PhasesDraw::Multiple) && !bufferedDraw) {
-			phase = DrawPhase::back;
+			for (DrawPhase phase = DrawPhase::back; phase <= DrawPhase::carets; phase = static_cast<DrawPhase>(static_cast<int>(phase) * 2)) {
+				phases.push_back(phase);
+			}
+		} else {
+			phases.push_back(DrawPhase::all);
 		}
-		for (;;) {
+		for (const DrawPhase &phase : phases) {
+			int ypos = 0;
+			if (!bufferedDraw)
+				ypos += screenLinePaintFirst * vsDraw.lineHeight;
 			int yposScreen = screenLinePaintFirst * vsDraw.lineHeight;
-			int ypos = bufferedDraw ? 0 : yposScreen;
 			Sci::Line visibleLine = model.TopLineOfMain() + screenLinePaintFirst;
 			while (visibleLine < model.pcs->LinesDisplayed() && yposScreen < rcArea.bottom) {
 
@@ -2555,10 +2561,6 @@ void EditView::PaintText(Surface *surfaceWindow, const EditModel &model, const V
 					ll = RetrieveLineLayout(lineDoc, model);
 					LayoutLine(model, surface, vsDraw, ll.get(), model.wrapWidth);
 					lineDocPrevious = lineDoc;
-					if (ll && model.BidirectionalEnabled()) {
-						// Fill the line bidi data
-						UpdateBidiData(model, vsDraw, ll.get());
-					}
 				}
 #if defined(TIME_PAINTING)
 				durLayout += ep.Duration(true);
@@ -2584,6 +2586,11 @@ void EditView::PaintText(Surface *surfaceWindow, const EditModel &model, const V
 						rcSpacer.right = rcSpacer.left;
 						rcSpacer.left -= 1;
 						surface->FillRectangleAligned(rcSpacer, Fill(vsDraw.styles[StyleDefault].back));
+					}
+
+					if (model.BidirectionalEnabled()) {
+						// Fill the line bidi data
+						UpdateBidiData(model, vsDraw, ll.get());
 					}
 
 					DrawLine(surface, model, vsDraw, ll.get(), lineDoc, visibleLine, xStart, rcLine, subLine, phase);
@@ -2624,11 +2631,6 @@ void EditView::PaintText(Surface *surfaceWindow, const EditModel &model, const V
 				yposScreen += vsDraw.lineHeight;
 				visibleLine++;
 			}
-
-			if (phase >= DrawPhase::carets) {
-				break;
-			}
-			phase = static_cast<DrawPhase>(static_cast<int>(phase) * 2);
 		}
 		ll.reset();
 #if defined(TIME_PAINTING)

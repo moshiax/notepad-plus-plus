@@ -162,7 +162,6 @@ LanguageNameInfo ScintillaEditView::_langNameInfoArray[L_EXTERNAL + 1] = {
 	{L"go",               L"Go",                     L"Go source file",                                    L_GOLANG,          "cpp"},
 	{L"raku",             L"Raku",                   L"Raku source file",                                  L_RAKU,            "raku"},
 	{L"toml",             L"TOML",                   L"Tom's Obvious Minimal Language file",               L_TOML,            "toml"},
-	{L"sas",              L"SAS",                    L"SAS file",                                          L_SAS,             "sas"},
 	{L"ext",              L"External",               L"External",                                          L_EXTERNAL,        "null"}
 };
 
@@ -253,9 +252,8 @@ void ScintillaEditView::init(HINSTANCE hInst, HWND hPere)
 	const COLORREF hiddenLinesGreen = RGB(0x77, 0xCC, 0x77);
 	long hiddenLinesGreenWithAlpha = hiddenLinesGreen | 0xFF000000;
 	setElementColour(SC_ELEMENT_HIDDEN_LINE, hiddenLinesGreenWithAlpha);
-	
-	NppParameters& nppParams = NppParameters::getInstance();
-	if (nppParams._dpiManager.scaleX(100) >= 150)
+
+	if (NppParameters::getInstance()._dpiManager.scaleX(100) >= 150)
 	{
 		execute(SCI_RGBAIMAGESETWIDTH, 18);
 		execute(SCI_RGBAIMAGESETHEIGHT, 18);
@@ -313,7 +311,7 @@ void ScintillaEditView::init(HINSTANCE hInst, HWND hPere)
 	execute(SCI_INDICSETUNDER, SCE_UNIVERSAL_FOUND_STYLE_EXT4, true);
 	execute(SCI_INDICSETUNDER, SCE_UNIVERSAL_FOUND_STYLE_EXT5, true);
 
-	NppGUI& nppGui = nppParams.getNppGUI();
+	NppGUI& nppGui = (NppParameters::getInstance()).getNppGUI();
 
 	HMODULE hNtdllModule = ::GetModuleHandle(L"ntdll.dll");
 	FARPROC isWINE = nullptr;
@@ -321,20 +319,12 @@ void ScintillaEditView::init(HINSTANCE hInst, HWND hPere)
 		isWINE = ::GetProcAddress(hNtdllModule, "wine_get_version");
 
 	if (isWINE || // There is a performance issue under WINE when DirectWrite is ON, so we turn it off if user uses Notepad++ under WINE
-		isCoreWindows()) // In the case of Windows Server Core, DirectWrite cannot be on.
-	{
-		nppGui._writeTechnologyEngine = directWriteTechnologyUnavailable;
-	}
-	else
-	{
-		// allow IDC_COMBO_SC_TECHNOLOGY_CHOICE to be set in Preferences > MISC. again
-		if (nppGui._writeTechnologyEngine == directWriteTechnologyUnavailable)
-			nppGui._writeTechnologyEngine = defaultTechnology;
-	}
+		::IsWindowsServer()) // In the case of Windows Server Core, DirectWrite cannot be on.
+		nppGui._writeTechnologyEngine = defaultTechnology;
 
-	if ((nppGui._writeTechnologyEngine > defaultTechnology) && (nppGui._writeTechnologyEngine < directWriteTechnologyUnavailable))
+	if (nppGui._writeTechnologyEngine == directWriteTechnology)
 	{
-		execute(SCI_SETTECHNOLOGY, nppGui._writeTechnologyEngine);
+		execute(SCI_SETTECHNOLOGY, SC_TECHNOLOGY_DIRECTWRITE);
 		// If useDirectWrite is turned off, leave the technology setting untouched,
 		// so that existing plugins using SCI_SETTECHNOLOGY behave like before
 	}
@@ -357,7 +347,6 @@ void ScintillaEditView::init(HINSTANCE hInst, HWND hPere)
 			delete[] defaultCharList;
 		}
 	}
-	unsigned long MODEVENTMASK_ON = nppParams.getScintillaModEventMask();
 	execute(SCI_SETMODEVENTMASK, MODEVENTMASK_ON);
 	//Get the startup document and make a buffer for it so it can be accessed like a file
 	attachDefaultDoc();
@@ -393,7 +382,6 @@ LRESULT CALLBACK ScintillaEditView::scintillaStatic_Proc(HWND hwnd, UINT Message
 		return ::DefWindowProc(hwnd, Message, wParam, lParam);
 
 }
-
 LRESULT ScintillaEditView::scintillaNew_Proc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	switch (Message)
@@ -547,15 +535,14 @@ LRESULT ScintillaEditView::scintillaNew_Proc(HWND hwnd, UINT Message, WPARAM wPa
 				MultiCaretInfo(int len, size_t n) : _len2remove(len), _selIndex(n) {};
 			};
 
+			SHORT ctrl = GetKeyState(VK_CONTROL);
+			SHORT alt = GetKeyState(VK_MENU);
+			SHORT shift = GetKeyState(VK_SHIFT);
 			bool isColumnSelection = (execute(SCI_GETSELECTIONMODE) == SC_SEL_RECTANGLE) || (execute(SCI_GETSELECTIONMODE) == SC_SEL_THIN);
 			bool column2MultSelect = (NppParameters::getInstance()).getSVP()._columnSel2MultiEdit;
 
 			if (wParam == VK_DELETE)
 			{
-				SHORT ctrl = GetKeyState(VK_CONTROL);
-				SHORT alt = GetKeyState(VK_MENU);
-				SHORT shift = GetKeyState(VK_SHIFT);
-
 				if (!(shift & 0x8000) && !(ctrl & 0x8000) && !(alt & 0x8000)) // DEL & Multi-edit
 				{
 					size_t nbSelections = execute(SCI_GETSELECTIONS);
@@ -576,8 +563,8 @@ LRESULT ScintillaEditView::scintillaNew_Proc(HWND hwnd, UINT Message, WPARAM wPa
 							{
 								size_t docLen = getCurrentDocLen();
 
-								char eolStr[3] = { '\0' };
-								Sci_TextRangeFull tr {};
+								char eolStr[3];
+								Sci_TextRangeFull tr;
 								tr.chrg.cpMin = posStart;
 								tr.chrg.cpMax = posEnd + 2;
 								if (tr.chrg.cpMax > static_cast<Sci_Position>(docLen))
@@ -1717,7 +1704,6 @@ void ScintillaEditView::setNpcAndCcUniEOL(long color)
 	redraw();
 }
 
-
 void ScintillaEditView::defineDocType(LangType typeDoc)
 {
 	StyleArray & stylers = NppParameters::getInstance().getMiscStylerArray();
@@ -1821,12 +1807,12 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
             setTclLexer(); break;
 
 
-		case L_OBJC :
-			setObjCLexer(typeDoc); break;
+        case L_OBJC :
+            setObjCLexer(typeDoc); break;
 
 	    case L_PHP :
 		case L_ASP :
-		case L_JSP :
+        case L_JSP :
 		case L_HTML :
 		case L_XML :
 			setXmlLexer(typeDoc); break;
@@ -1856,7 +1842,7 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
 				setUserLexer();
 			break; }
 
-		case L_ASCII :
+        case L_ASCII :
 		{
 			LexerStyler *pStyler = (NppParameters::getInstance().getLStylerArray()).getLexerStylerByName(L"nfo");
 
@@ -1924,52 +1910,52 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
 			setFortran77Lexer(); break;
 
 		case L_LISP :
-			setLispLexer(); break;
+            setLispLexer(); break;
 
 		case L_SCHEME :
-			setSchemeLexer(); break;
+            setSchemeLexer(); break;
 
 		case L_ASM :
-			setAsmLexer(); break;
+            setAsmLexer(); break;
 
 		case L_DIFF :
-			setDiffLexer(); break;
+            setDiffLexer(); break;
 
 		case L_PROPS :
-			setPropsLexer(); break;
+            setPropsLexer(); break;
 
 		case L_PS :
-			setPostscriptLexer(); break;
+            setPostscriptLexer(); break;
 
 		case L_RUBY :
-			setRubyLexer(); break;
+            setRubyLexer(); break;
 
 		case L_SMALLTALK :
-			setSmalltalkLexer(); break;
+            setSmalltalkLexer(); break;
 
 		case L_VHDL :
-			setVhdlLexer(); break;
+            setVhdlLexer(); break;
 
 		case L_KIX :
-			setKixLexer(); break;
+            setKixLexer(); break;
 
 		case L_CAML :
-			setCamlLexer(); break;
+            setCamlLexer(); break;
 
 		case L_ADA :
-			setAdaLexer(); break;
+            setAdaLexer(); break;
 
 		case L_VERILOG :
-			setVerilogLexer(); break;
+            setVerilogLexer(); break;
 
 		case L_AU3 :
-			setAutoItLexer(); break;
+            setAutoItLexer(); break;
 
 		case L_MATLAB :
-			setMatlabLexer(); break;
+            setMatlabLexer(); break;
 
 		case L_HASKELL :
-			setHaskellLexer(); break;
+            setHaskellLexer(); break;
 
 		case L_INNO :
 			setInnoLexer(); break;
@@ -1980,19 +1966,19 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
 		case L_YAML :
 			setYamlLexer(); break;
 
-		case L_COBOL :
+        case L_COBOL :
 			setCobolLexer(); break;
 
-		case L_GUI4CLI :
+        case L_GUI4CLI :
 			setGui4CliLexer(); break;
 
-		case L_D :
+        case L_D :
 			setDLexer(); break;
 
-		case L_POWERSHELL :
+        case L_POWERSHELL :
 			setPowerShellLexer(); break;
 
-		case L_R :
+        case L_R :
 			setRLexer(); break;
 
 		case L_COFFEESCRIPT :
@@ -2085,9 +2071,6 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
 		case L_TOML:
 			setTomlLexer(); break;
 
-		case L_SAS:
-			setSasLexer(); break;
-
 		case L_TEXT :
 		default :
 			if (typeDoc >= L_EXTERNAL && typeDoc < NppParameters::getInstance().L_END)
@@ -2131,14 +2114,17 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
 		if (currentIndentMode != docIndentMode)
 			execute(SCI_SETINDENTATIONGUIDES, docIndentMode);
 	}
+
+	execute(SCI_SETLAYOUTCACHE, SC_CACHE_DOCUMENT, 0);
+	execute(SCI_STARTSTYLING, 0, 0);
 }
 
 Document ScintillaEditView::getBlankDocument()
 {
-	if (!_blankDocument)
+	if(_blankDocument==0)
 	{
-		_blankDocument = static_cast<Document>(execute(SCI_CREATEDOCUMENT, 0, SC_DOCUMENTOPTION_TEXT_LARGE));
-		execute(SCI_ADDREFDOCUMENT, 0, _blankDocument);
+		_blankDocument=static_cast<Document>(execute(SCI_CREATEDOCUMENT,0,SC_DOCUMENTOPTION_TEXT_LARGE));
+		execute(SCI_ADDREFDOCUMENT,0,_blankDocument);
 	}
 	return _blankDocument;
 }
@@ -2293,9 +2279,10 @@ bool ScintillaEditView::setLexerFromLangID(int langID) // Internal lexer only
 
 void ScintillaEditView::activateBuffer(BufferID buffer, bool force)
 {
-	if (buffer == BUFFER_INVALID) return;
-	if (!force && buffer == _currentBuffer)	return;
-
+	if (buffer == BUFFER_INVALID)
+		return;
+	if (!force && buffer == _currentBuffer)
+		return;
 	Buffer * newBuf = MainFileManager.getBufferByID(buffer);
 
 	// before activating another document, we get the current position
@@ -2314,13 +2301,10 @@ void ScintillaEditView::activateBuffer(BufferID buffer, bool force)
 	_currentBufferID = buffer;	//the magical switch happens here
 	_currentBuffer = newBuf;
 
-	const bool isSameLangType = (_prevBuffer != nullptr) && (_prevBuffer->getLangType() == _currentBuffer->getLangType()) &&
-		(_currentBuffer->getLangType() != L_USER ||	wcscmp(_prevBuffer->getUserDefineLangName(), _currentBuffer->getUserDefineLangName()) == 0);
-
+	const bool isSameLangType = _prevBuffer != nullptr && ((_prevBuffer == _currentBuffer) || (_prevBuffer->getLangType() == _currentBuffer->getLangType()));
 	const int currentLangInt = static_cast<int>(_currentBuffer->getLangType());
 	const bool isFirstActiveBuffer = (_currentBuffer->getLastLangType() != currentLangInt);
 
-	unsigned long MODEVENTMASK_ON = NppParameters::getInstance().getScintillaModEventMask();
 	if (isFirstActiveBuffer)  // Entering the tab for the 1st time
 	{
 		// change the doc, this operation will decrease
@@ -2340,9 +2324,6 @@ void ScintillaEditView::activateBuffer(BufferID buffer, bool force)
 		execute(SCI_SETMODEVENTMASK, MODEVENTMASK_OFF);
 		execute(SCI_SETDOCPOINTER, 0, _currentBuffer->getDocument());
 		execute(SCI_SETMODEVENTMASK, MODEVENTMASK_ON);
-
-		if (force)
-			defineDocType(_currentBuffer->getLangType());
 	}
 	else // Entering the tab for the 2nd or more times, with the different language type
 	{
@@ -2362,6 +2343,12 @@ void ScintillaEditView::activateBuffer(BufferID buffer, bool force)
 	_currentBuffer->setLastLangType(currentLangInt);
 
 	setWordChars();
+
+	if (_currentBuffer->getNeedsLexing())
+	{
+		restyleBuffer();
+	}
+
 	maintainStateForNpc();
 
 	// Everything should be updated, but the language
@@ -2372,7 +2359,10 @@ void ScintillaEditView::activateBuffer(BufferID buffer, bool force)
 	syncFoldStateWith(lineStateVectorNew);
 
 	restoreCurrentPosPreStep();
+
+	//runMarkers(true, 0, true, false);
 	restoreHiddenLines();
+
 	setCRLF();
 
 	NppParameters& nppParam = NppParameters::getInstance();
@@ -2418,24 +2408,10 @@ void ScintillaEditView::getCurrentFoldStates(std::vector<size_t> & lineStateVect
 void ScintillaEditView::syncFoldStateWith(const std::vector<size_t> & lineStateVectorNew)
 {
 	size_t nbLineState = lineStateVectorNew.size();
-
-	if (nbLineState > 0)
+	for (size_t i = 0 ; i < nbLineState ; ++i)
 	{
-		if (nbLineState > MAX_FOLD_LINES_MORE_THAN) // Block WM_SETREDRAW messages
-			::SendMessage(_hSelf, WM_SETREDRAW, FALSE, 0);
-
-		for (size_t i = 0; i < nbLineState; ++i)
-		{
-			auto line = lineStateVectorNew.at(i);
-			fold(line, fold_collapse, false);
-		}
-
-		if (nbLineState > MAX_FOLD_LINES_MORE_THAN)
-		{
-			::SendMessage(_hSelf, WM_SETREDRAW, TRUE, 0);
-			execute(SCI_SCROLLCARET);
-			::InvalidateRect(_hSelf, nullptr, TRUE);
-		}
+		auto line = lineStateVectorNew.at(i);
+		fold(line, false);
 	}
 }
 
@@ -2447,7 +2423,7 @@ void ScintillaEditView::bufferUpdated(Buffer * buffer, int mask)
 		if (mask & BufferChangeLanguage)
 		{
 			defineDocType(buffer->getLangType());
-			foldAll(fold_expand);
+			foldAll(fold_uncollapse);
 		}
 
 		if (mask & BufferChangeLexing)
@@ -2521,18 +2497,15 @@ struct FoldLevelStack
 
 }
 
-void ScintillaEditView::foldIndentationBasedLevel(int level2Collapse, bool mode)
+void ScintillaEditView::collapseFoldIndentationBased(int level2Collapse, bool mode)
 {
+	execute(SCI_COLOURISE, 0, -1);
+
 	FoldLevelStack levelStack;
 	++level2Collapse; // 1-based level number
 
 	const intptr_t maxLine = execute(SCI_GETLINECOUNT);
 	intptr_t line = 0;
-
-	if (maxLine > MAX_FOLD_LINES_MORE_THAN)
-	{
-		::SendMessage(_hSelf, WM_SETREDRAW, FALSE, 0);
-	}
 
 	while (line < maxLine)
 	{
@@ -2555,33 +2528,20 @@ void ScintillaEditView::foldIndentationBasedLevel(int level2Collapse, bool mode)
 		++line;
 	}
 
-	if (maxLine > MAX_FOLD_LINES_MORE_THAN)
-	{
-		::SendMessage(_hSelf, WM_SETREDRAW, TRUE, 0);
-		execute(SCI_SCROLLCARET);
-		::InvalidateRect(_hSelf, nullptr, TRUE);
-	}
-
-	if (mode == fold_expand)
-		hideMarkedLines(0, true);
+	runMarkers(true, 0, true, false);
 }
 
-
-void ScintillaEditView::foldLevel(int level2Collapse, bool mode)
+void ScintillaEditView::collapse(int level2Collapse, bool mode)
 {
-
 	if (isFoldIndentationBased())
 	{
-		foldIndentationBasedLevel(level2Collapse, mode);
+		collapseFoldIndentationBased(level2Collapse, mode);
 		return;
 	}
 
-	intptr_t maxLine = execute(SCI_GETLINECOUNT);
+	execute(SCI_COLOURISE, 0, -1);
 
-	if (maxLine > MAX_FOLD_LINES_MORE_THAN)
-	{
-		::SendMessage(_hSelf, WM_SETREDRAW, FALSE, 0);
-	}
+	intptr_t maxLine = execute(SCI_GETLINECOUNT);
 
 	for (int line = 0; line < maxLine; ++line)
 	{
@@ -2597,15 +2557,7 @@ void ScintillaEditView::foldLevel(int level2Collapse, bool mode)
 		}
 	}
 
-	if (maxLine > MAX_FOLD_LINES_MORE_THAN)
-	{
-		::SendMessage(_hSelf, WM_SETREDRAW, TRUE, 0);
-		execute(SCI_SCROLLCARET);
-		::InvalidateRect(_hSelf, nullptr, TRUE);
-	}
-
-	if (mode == fold_expand)
-		hideMarkedLines(0, true);
+	runMarkers(true, 0, true, false);
 }
 
 void ScintillaEditView::foldCurrentPos(bool mode)
@@ -2634,8 +2586,14 @@ bool ScintillaEditView::isCurrentLineFolded() const
 	return !isExpanded;
 }
 
-void ScintillaEditView::fold(size_t line, bool mode, bool shouldBeNotified/* = true*/)
+void ScintillaEditView::fold(size_t line, bool mode)
 {
+	auto endStyled = execute(SCI_GETENDSTYLED);
+	auto len = execute(SCI_GETTEXTLENGTH);
+
+	if (endStyled < len)
+		execute(SCI_COLOURISE, 0, -1);
+
 	intptr_t headerLine;
 	auto level = execute(SCI_GETFOLDLEVEL, line);
 
@@ -2652,27 +2610,27 @@ void ScintillaEditView::fold(size_t line, bool mode, bool shouldBeNotified/* = t
 	{
 		execute(SCI_TOGGLEFOLD, headerLine);
 
-		if (shouldBeNotified)
-		{
-			SCNotification scnN{};
-			scnN.nmhdr.code = SCN_FOLDINGSTATECHANGED;
-			scnN.nmhdr.hwndFrom = _hSelf;
-			scnN.nmhdr.idFrom = 0;
-			scnN.line = headerLine;
-			scnN.foldLevelNow = isFolded(headerLine) ? 1 : 0; //folded:1, unfolded:0
-			::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scnN));
-		}
+		SCNotification scnN{};
+		scnN.nmhdr.code = SCN_FOLDINGSTATECHANGED;
+		scnN.nmhdr.hwndFrom = _hSelf;
+		scnN.nmhdr.idFrom = 0;
+		scnN.line = headerLine;
+		scnN.foldLevelNow = isFolded(headerLine)?1:0; //folded:1, unfolded:0
+
+		::SendMessage(_hParent, WM_NOTIFY, 0, reinterpret_cast<LPARAM>(&scnN));
 	}
 }
 
 void ScintillaEditView::foldAll(bool mode)
 {
-	execute(SCI_FOLDALL, (mode == fold_expand ? SC_FOLDACTION_EXPAND : SC_FOLDACTION_CONTRACT) | SC_FOLDACTION_CONTRACT_EVERY_LEVEL, 0);
+	auto maxLine = execute(SCI_GETLINECOUNT);
 
-	if (mode == fold_expand)
+	for (int line = 0; line < maxLine; ++line)
 	{
-		hideMarkedLines(0, true);
-		execute(SCI_SCROLLCARET);
+		auto level = execute(SCI_GETFOLDLEVEL, line);
+		if (level & SC_FOLDLEVELHEADERFLAG)
+			if (isFolded(line) != mode)
+				fold(line, mode);
 	}
 }
 
@@ -3017,9 +2975,7 @@ void ScintillaEditView::marginClick(Sci_Position position, int modifiers)
 			// Toggle this line
 			bool mode = isFolded(lineClick);
 			fold(lineClick, !mode);
-
-			if (!mode == fold_expand) // after toggling
-				hideMarkedLines(lineClick, true);
+			runMarkers(true, lineClick, true, false);
 		}
 	}
 }
@@ -3071,8 +3027,7 @@ void ScintillaEditView::expand(size_t& line, bool doExpand, bool force, intptr_t
 			++line;
 	}
 
-	if (doExpand)
-		hideMarkedLines(0, true);
+	runMarkers(true, 0, true, false);
 }
 
 
@@ -4020,21 +3975,19 @@ void ScintillaEditView::scrollPosToCenter(size_t pos)
 
 void ScintillaEditView::hideLines()
 {
-	// Unfolding can screw up hide lines badly if it unfolds a hidden section.
-	// Using hideMarkedLines() after unfolding can help
+	//Folding can screw up hide lines badly if it unfolds a hidden section.
+	//Adding runMarkers(hide, foldstart) directly (folding on single document) can help
 
+	//Special func on buffer. If markers are added, create notification with location of start, and hide bool set to true
 	size_t startLine = execute(SCI_LINEFROMPOSITION, execute(SCI_GETSELECTIONSTART));
 	size_t endLine = execute(SCI_LINEFROMPOSITION, execute(SCI_GETSELECTIONEND));
-
-	// perform range check: cannot hide very first and very last lines
-	// Offset them one off the edges, and then check if they are within the reasonable
+	//perform range check: cannot hide very first and very last lines
+	//Offset them one off the edges, and then check if they are within the reasonable
 	size_t nbLines = execute(SCI_GETLINECOUNT);
 	if (nbLines < 3)
 		return;	//cannot possibly hide anything
-
 	if (!startLine)
 		++startLine;
-
 	if (endLine == (nbLines-1))
 		--endLine;
 
@@ -4071,10 +4024,8 @@ void ScintillaEditView::hideLines()
 	// Previous markers must be removed in the selected region:
 
 	removeMarker(startMarker, 1 << MARK_HIDELINESBEGIN);
-
 	for (size_t i = startLine; i <= endLine; ++i)
 		removeMarker(i, (1 << MARK_HIDELINESBEGIN) | (1 << MARK_HIDELINESEND));
-	
 	removeMarker(endMarker, 1 << MARK_HIDELINESEND);
 
 	// When hiding lines just below/above other hidden lines,
@@ -4109,7 +4060,7 @@ void ScintillaEditView::hideLines()
 	_currentBuffer->setHideLineChanged(true, startMarker);
 }
 
-bool ScintillaEditView::hidelineMarkerClicked(intptr_t lineNumber)
+bool ScintillaEditView::markerMarginClick(intptr_t lineNumber)
 {
 	auto state = execute(SCI_MARKERGET, lineNumber);
 	bool openPresent = (state & (1 << MARK_HIDELINESBEGIN)) != 0;
@@ -4148,147 +4099,135 @@ bool ScintillaEditView::hidelineMarkerClicked(intptr_t lineNumber)
 	return true;
 }
 
-void ScintillaEditView::notifyHidelineMarkers(Buffer * buf, bool isHide, size_t location, bool del)
+void ScintillaEditView::notifyMarkers(Buffer * buf, bool isHide, size_t location, bool del)
 {
 	if (buf != _currentBuffer)	//if not visible buffer dont do a thing
 		return;
-
-	if (isHide)
-		hideMarkedLines(location, false);
-	else
-		showHiddenLines(location, false, del);
+	runMarkers(isHide, location, false, del);
 }
 
 //Run through full document. When switching in or opening folding
 //hide is false only when user click on margin
-
-//Removes markers if opening
-/*
-AllLines = (start,ENDOFDOCUMENT)
-Hide:
-	Run through all lines.
-		Find open hiding marker:
-			set hiding start
-		Find closing:
-			if (hiding):
-				Hide lines between now and start
-				if (endOfDoc = false)
-					return
-				else
-					search for other hidden sections
-
-Show:
-	Run through all lines
-		Find open hiding marker
-			set last start
-		Find closing:
-			Show from last start. Stop.
-		Find closed folding header:
-			Show from last start to folding header
-			Skip to LASTCHILD
-			Set last start to lastchild
-*/
-	
-void ScintillaEditView::hideMarkedLines(size_t searchStart, bool toEndOfDoc)
+void ScintillaEditView::runMarkers(bool doHide, size_t searchStart, bool endOfDoc, bool doDelete)
 {
-	size_t maxLines = execute(SCI_GETLINECOUNT);
-
-	auto startHiding = searchStart;
-	bool isInSection = false;
-
-	for (auto i = searchStart; i < maxLines; ++i)
-	{
-		auto state = execute(SCI_MARKERGET, i);
-		if ( ((state & (1 << MARK_HIDELINESEND)) != 0) )
-		{
-			if (isInSection)
-			{
-				execute(SCI_HIDELINES, startHiding, i-1);
-				if (!toEndOfDoc)
-				{
-					return;	//done, only single section requested
-				}	//otherwise keep going
-			}
-			isInSection = false;
-		}
-
-		if ((state & (1 << MARK_HIDELINESBEGIN)) != 0)
-		{
-			isInSection = true;
-			startHiding = i+1;
-		}
-
-	}
-}
-	
-void ScintillaEditView::showHiddenLines(size_t searchStart, bool toEndOfDoc, bool doDelete)
-{
-	size_t maxLines = execute(SCI_GETLINECOUNT);
-
-	auto startShowing = searchStart;
-	bool isInSection = false;
-	for (auto i = searchStart; i < maxLines; ++i)
-	{
-		auto state = execute(SCI_MARKERGET, i);
-		if ((state & (1 << MARK_HIDELINESBEGIN)) != 0 && !isInSection)
-		{
-			isInSection = true;
-			if (doDelete)
-			{
-				execute(SCI_MARKERDELETE, i, MARK_HIDELINESBEGIN);
-			}
-			else
-			{
-				startShowing = i + 1;
-			}
-		}
-		else if ( (state & (1 << MARK_HIDELINESEND)) != 0)
-		{
-			if (doDelete)
-			{
-				execute(SCI_MARKERDELETE, i, MARK_HIDELINESEND);
-				if (!toEndOfDoc)
-				{
-					return;	//done, only single section requested
-				}	//otherwise keep going
-				isInSection = false;
-			}
-			else if (isInSection)
-			{
-				if (startShowing >= i)
-				{	//because of fold skipping, we passed the close tag. In that case we cant do anything
-					if (!toEndOfDoc)
-					{
-						return;
-					}
+	//Removes markers if opening
+	/*
+	AllLines = (start,ENDOFDOCUMENT)
+	Hide:
+		Run through all lines.
+			Find open hiding marker:
+				set hiding start
+			Find closing:
+				if (hiding):
+					Hide lines between now and start
+					if (endOfDoc = false)
+						return
 					else
-					{
-						isInSection = false; // assume we passed the close tag
-						continue;
-					}
-				}
+						search for other hidden sections
 
-				execute(SCI_SHOWLINES, startShowing, i-1);
-
-				if (!toEndOfDoc)
+	Show:
+		Run through all lines
+			Find open hiding marker
+				set last start
+			Find closing:
+				Show from last start. Stop.
+			Find closed folding header:
+				Show from last start to folding header
+				Skip to LASTCHILD
+				Set last start to lastchild
+	*/
+	size_t maxLines = execute(SCI_GETLINECOUNT);
+	if (doHide)
+	{
+		auto startHiding = searchStart;
+		bool isInSection = false;
+		for (auto i = searchStart; i < maxLines; ++i)
+		{
+			auto state = execute(SCI_MARKERGET, i);
+			if ( ((state & (1 << MARK_HIDELINESEND)) != 0) )
+			{
+				if (isInSection)
 				{
-					return;	//done, only single section requested
-				}	//otherwise keep going
+					execute(SCI_HIDELINES, startHiding, i-1);
+					if (!endOfDoc)
+					{
+						return;	//done, only single section requested
+					}	//otherwise keep going
+				}
 				isInSection = false;
 			}
-		}
-
-		auto levelLine = execute(SCI_GETFOLDLEVEL, i, 0);
-		if (levelLine & SC_FOLDLEVELHEADERFLAG)
-		{	//fold section. Dont show lines if fold is closed
-			if (isInSection && !isFolded(i))
+			if ((state & (1 << MARK_HIDELINESBEGIN)) != 0)
 			{
-				execute(SCI_SHOWLINES, startShowing, i);
+				isInSection = true;
+				startHiding = i+1;
+			}
+
+		}
+	}
+	else
+	{
+		auto startShowing = searchStart;
+		bool isInSection = false;
+		for (auto i = searchStart; i < maxLines; ++i)
+		{
+			auto state = execute(SCI_MARKERGET, i);
+			if ((state & (1 << MARK_HIDELINESBEGIN)) != 0 && !isInSection)
+			{
+				isInSection = true;
+				if (doDelete)
+				{
+					execute(SCI_MARKERDELETE, i, MARK_HIDELINESBEGIN);
+				}
+				else
+				{
+					startShowing = i + 1;
+				}
+			}
+			else if ( (state & (1 << MARK_HIDELINESEND)) != 0)
+			{
+				if (doDelete)
+				{
+					execute(SCI_MARKERDELETE, i, MARK_HIDELINESEND);
+					if (!endOfDoc)
+					{
+						return;	//done, only single section requested
+					}	//otherwise keep going
+					isInSection = false;
+				}
+				else if (isInSection)
+				{
+					if (startShowing >= i)
+					{	//because of fold skipping, we passed the close tag. In that case we cant do anything
+						if (!endOfDoc)
+						{
+							return;
+						}
+						else
+						{
+							isInSection = false; // assume we passed the close tag
+							continue;
+						}
+					}
+					execute(SCI_SHOWLINES, startShowing, i-1);
+					if (!endOfDoc)
+					{
+						return;	//done, only single section requested
+					}	//otherwise keep going
+					isInSection = false;
+				}
+			}
+
+			auto levelLine = execute(SCI_GETFOLDLEVEL, i, 0);
+			if (levelLine & SC_FOLDLEVELHEADERFLAG)
+			{	//fold section. Dont show lines if fold is closed
+				if (isInSection && !isFolded(i))
+				{
+					execute(SCI_SHOWLINES, startShowing, i);
+				}
 			}
 		}
 	}
 }
-
 
 void ScintillaEditView::restoreHiddenLines()
 {
@@ -4306,6 +4245,7 @@ void ScintillaEditView::restoreHiddenLines()
 			if (line != -1)
 			{
 				execute(SCI_HIDELINES, startHiding, line - 1);
+
 			}
 		}
 	}
@@ -4432,8 +4372,7 @@ void ScintillaEditView::changeTextDirection(bool isRTL)
 		return;
 
 	NppParameters& nppParamInst = NppParameters::getInstance();
-	if (isRTL && (nppParamInst.getNppGUI()._writeTechnologyEngine > defaultTechnology)
-		&& (nppParamInst.getNppGUI()._writeTechnologyEngine < directWriteTechnologyUnavailable)) // RTL is not compatible with DirectWrite
+	if (isRTL && nppParamInst.getNppGUI()._writeTechnologyEngine == directWriteTechnology) // RTL is not compatible with Direct Write Technology
 	{
 		static bool theWarningIsGiven = false;
 
